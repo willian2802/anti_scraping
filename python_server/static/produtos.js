@@ -3,19 +3,19 @@ let produtos = [
         id: 1,
         name:"Nescafe",
         price: 5.00,
-        Image: "../web_scrap_page/assets/buondi.webp"
+        Image: "../static/assets/buondi.webp"
     },
     {
         id: 2,
         name:"cafe",
         price: 7.00,
-        Image: "../web_scrap_page/assets/continente.webp"
+        Image: "../static/assets/continente.webp"
     },
     {
         id: 3,
         name:"nada de cafe",
         price: 8.00,
-        Image: "../web_scrap_page/assets/cafe1.jpg"
+        Image: "../static/assets/cafe1.jpg"
     }
 ]
 

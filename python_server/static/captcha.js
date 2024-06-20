@@ -49,8 +49,8 @@ function check_captcha() {
 
         // adiciona um button com o link do site real
         captcha_area.innerHTML = `
-        <a href="cof_page.html">
-            <button link="" id="next_page_btn" type="button" class="btn btn-primary">Click aqui</button>
+        <a href="/views/cofe_shop">
+            <button id="next_page_btn" type="button" class="btn btn-primary">Click aqui</button>
         </a>
         `
 
