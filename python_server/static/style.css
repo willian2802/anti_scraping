@@ -128,3 +128,11 @@ main {
 .price_button {
     margin: auto;
 }
+
+/* ------------------------- Captcha -------------------------*/
+
+.input {
+    opacity: 0.1;
+    height: 1px;
+    width: 1px;
+}
