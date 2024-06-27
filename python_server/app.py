@@ -11,11 +11,13 @@ app.register_blueprint(views, url_prefix='/views')
 # +--------------------------- lists ---------------------------
 
 black_list_IP = ["192.168.0.1", "192.168.0.2"]
-yellow_list_IP = []
+yellow_list_IP = ["127.0.0.1", "127.0.0.2"]
 green_list_IP = []
 
 access_log = {}  #dicionário para registrar as requisições
 
+
+Logs = []
 # --------------------------- Logs Class ---------------------------
 class Request_Log:
     def __init__(self, current_time, ip_address, path, agent, hash_code):
@@ -25,18 +27,27 @@ class Request_Log:
         self.agent = agent
         self.hash_code = hash_code
 
-    def __create__(self):
-        access_log[self.current_time].append(self.current_time)
-        access_log[self.ip_address].append(self.ip_address)
-        access_log[self.path].append(self.path)
-        access_log[self.agent].append(self.agent)
-        access_log[self.hash_code].append(self.hash_code)
+    def create_log(self):
 
-    def __show__(self):
+        # generate a log
+        log = {
+        'current_time': self.current_time,
+        'user_ip': self.ip_address,
+        'user_agent': self.agent,
+        'path': self.path,
+        'hash_code': self.hash_code
+        }
+        Logs.append(log)
+
+    def show_log(self):
         return f"Current Time: {self.current_time}, IP: {self.ip_address}, Path: {self.path}, Agent: {self.agent}, Hash Code: {self.hash_code}"
+    
+    def show_all(self):
+        return (Logs)
 
-    def __remove__(self):
-        access_log[self.ip_address].remove(self.path)
+
+    # def remove(self):
+    #     access_log[self.ip_address].remove(self.path)
         
 
 # --------------------------- block bots ---------------------------
@@ -45,10 +56,12 @@ class Request_Log:
 @app.route('/')
 def block_user_for():
 
+    # pega o IP da requisição
     ip_address = request.remote_addr
 
     # bloqueia os agents que tenhan o nome "bot" ou "scraper"
     user_agent = request.headers.get('User-Agent')
+
     if "Chrome" in user_agent.lower() or "scraper" in user_agent.lower():
         return "Access denied. Bots or scrapers are not pertmitted" 
     
@@ -116,6 +129,11 @@ def trap_activated():
 @app.route('/fingerprint')
 def generate_ip_fingerprint() -> str:
 
+    # lembrando que o fingerprint como so nos interesa e criar um jeito de identificar as
+    # maquinas que estao tentando acessar o site, request_time e user_agent e por fim o IP
+    # pode nao ser a melhor escolha para faazer o fingerprint
+    # tamanho da tela e o sistema operacional etc... pode uma melhor escolha
+     
     user_Ip = request.remote_addr
     user_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     user_agent = request.headers.get('User-Agent')
@@ -128,7 +146,12 @@ def generate_ip_fingerprint() -> str:
     hash_object.update(combined_data.encode('utf-8'))
     # Obtém o hash hexadecimal
     fingerprint = hash_object.hexdigest()
-    return fingerprint
+    
+    log = Request_Log(user_time, user_Ip, request.path, user_agent, fingerprint)
+    log.create_log()
+
+    return(Logs)
+
 
 
 

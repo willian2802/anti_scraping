@@ -1,11 +1,11 @@
-from flask import Blueprint, render_template, request, abort
+from flask import Blueprint, render_template, request
+from collections import defaultdict
 
 views = Blueprint(__name__, 'views')
 
 
 black_list_IP = []
 yellow_list_IP = []
-access_log = {}  #dicionário para registrar as requisições
 
 @views.route('/')
 def render_index():
@@ -19,18 +19,44 @@ def cofe_page():
     # isso renderiza a pagina cof_page da pasta templates 
     return render_template('cof_page.html')
 
-access_log = {}
+logs = []
+User_information = []
 @views.route('/descobrir_IP')
 def descobrir_IP():
     user_ip = request.remote_addr
     user_agent = request.headers.get('User-Agent')
-    if user_ip not in access_log:
-        access_log[user_ip] = []
-    access_log[user_ip].append(request.path)
 
-    #  se passar o limite de request o ip vai ser bloqueado
-    if len(access_log[user_ip]) > 100:  # Ajuste o limite conforme necessário
-        return abort(403)  # Bloqueia IPs com muitas requisições
+    user_info = {
+            'user_ip': "121.121.121.121",
+            'user_agent': user_agent,
+        }
 
-    return f"User IP: {user_ip}, User Agent: {user_agent}, Access Log: {access_log}"
+    # verifica se ja tem as informaçoes do usario
+    # se nao adiciona as informaçoes no user_info
+    if user_info not in User_information:
+        logs.append(user_info)
+    
+    # generate a log
+    log = {
+        'user_ip': user_ip,
+        'user_agent': user_agent,
+    }
+    logs.append(log)
+    
+
+    # Add the user's IP address to the list yellow_list_IP
+    # if the request is more than a certain number of times
+
+    # Dictionary to store the count of each IP address in the logs
+    ip_count = defaultdict(int)
+
+    if user_ip not in yellow_list_IP:
+        for log in logs:
+            ip_address = log['user_ip']
+            ip_count[ip_address] += 1
+
+        if ip_count[ip_address] > 5:
+            yellow_list_IP.append(user_ip)
+
+    return f"user_ip: {user_ip}, user_agent: {user_agent}, logs list: {logs}"
 
