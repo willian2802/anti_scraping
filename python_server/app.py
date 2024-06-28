@@ -51,10 +51,8 @@ class Request_Log:
         
 
 # --------------------------- block bots ---------------------------
-
-
-@app.route('/')
 def block_user_for():
+    print(black_list_IP)
 
     # pega o IP da requisição
     ip_address = request.remote_addr

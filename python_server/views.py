@@ -1,5 +1,9 @@
-from flask import Blueprint, render_template, request
 from collections import defaultdict
+from flask import Blueprint, render_template, request
+
+
+from app import block_user_for
+# from .block_user_for import block_user_for
 
 views = Blueprint(__name__, 'views')
 
@@ -9,6 +13,8 @@ yellow_list_IP = []
 
 @views.route('/')
 def render_index():
+
+    block_user_for()
     # isso renderiza o index.html da pasta templates e a pagina do captcha
     return render_template('index.html')
 
@@ -60,3 +66,47 @@ def descobrir_IP():
 
     return f"user_ip: {user_ip}, user_agent: {user_agent}, logs list: {logs}"
 
+
+# como importar a funçao do app.py pro views.py da conflito ja que ambos estao importando uns
+# dos outros talves seja melhor colocar as funçoes em utils.py so importar pra quanndo eu precisar
+
+# utils.py
+
+# def block_user_for():
+#     # your code here
+#     pass
+
+
+# # views.py
+
+# from flask import Blueprint, render_template, request
+# from utils import block_user_for
+
+# views = Blueprint(__name__, 'views')
+
+# @views.route('/')
+# def render_index():
+#     block_user_for()
+#     return render_template('index.html')
+
+# # app.py
+
+# from flask import Flask
+# from views import views
+# from utils import block_user_for
+
+# app = Flask(__name__)
+
+# app.register_blueprint(views, url_prefix='/views')
+
+# # views.py
+
+# from flask import Blueprint, render_template, request
+# from utils import block_user_for
+
+# views = Blueprint(__name__, 'views')
+
+# @views.route('/')
+# def render_index():
+#     block_user_for()
+#     return render_template('index.html')
