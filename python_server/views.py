@@ -1,9 +1,9 @@
 from collections import defaultdict
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, abort
 
 
 from functions import block_user_for
-from functions import Logs
+from functions import Logs, yellow_list_IP
 
 # from .block_user_for import block_user_for
 
@@ -18,6 +18,12 @@ def render_index():
 
     # roda as funçoes que verificao se e um bot ou nao se for entao bloqueia o acesso
     block_user_for()
+    result, comment = block_user_for()
+
+    # verifica se a function retorna true isso significa que o acesso foi bloqueado
+    if result == True:
+
+        return f"{comment}"
 
     # isso renderiza o index.html da pasta templates e a pagina do captcha
     return render_template('index.html')

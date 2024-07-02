@@ -1,6 +1,9 @@
 import hashlib
+import platform
+from collections import defaultdict
 from flask import Flask, request, abort
 from datetime import datetime, timedelta
+import tkinter as tk
 
 
 # +--------------------------- lists ---------------------------
@@ -9,9 +12,22 @@ black_list_IP = ["192.168.0.1", "192.168.0.2"]
 yellow_list_IP = []
 green_list_IP = []
 
+# def remove_duplicates(black_list_IP, yellow_list_IP, green_list_IP):
+
+#     black_list_IP = list(set(black_list_IP))
+#     yellow_list_IP = list(set(yellow_list_IP))
+#     green_list_IP = list(set(green_list_IP))
+
+#     black_list_IP = remove_duplicates(black_list_IP)
+#     yellow_list_IP = remove_duplicates(yellow_list_IP)
+#     green_list_IP = remove_duplicates(green_list_IP)
+
+#     return list(set(black_list_IP + yellow_list_IP + green_list_IP))
+
+
 access_log = {}  #dicionário para registrar as requisições
 
-
+User_information = []
 Logs = [{
     'current_time': '00:00:00',
     'user_ip': '127.0.0.1',
@@ -69,21 +85,33 @@ def block_user_for():
     # pega o IP o  user_agent a o tempo do request etc...
     ip_address = request.remote_addr
     user_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    user_agent = request.headers.get('User-Agent')
     PATH = request.path
+    user_agent = request.headers.get('User-Agent')
+    sistema_operacional = platform.system()
     
     # uma descriçao para o log ou outras informaçoes uteis
     coment = "None"
 
 
+    # ------------------ pega o tamanho da tela do usario ------------------
+    # Cria uma instância da janela Tkinter
+    root = tk.Tk()
+
+    # Obtém a largura e altura da tela
+    largura_tela = root.winfo_screenwidth()
+    altura_tela = root.winfo_screenheight()
+
+    # Fecha a janela Tkinter
+    root.destroy()
+
+    # Armazena o tamanho da tela na variável
+    tamanho_tela = (largura_tela, altura_tela)
+
+
     # ------------------ Create finger-print ------------------
-    # lembrando que o fingerprint como so nos interesa e criar um jeito de identificar as
-    # maquinas que estao tentando acessar o site, request_time e user_agent e por fim o IP
-    # pode nao ser a melhor escolha para faazer o fingerprint
-    # tamanho da tela e o sistema operacional etc... pode uma melhor escolha
      
     # Combina os dois IPs em uma única string
-    combined_data = f"{ip_address}-{user_time}-{user_agent}"
+    combined_data = f"{tamanho_tela}-{sistema_operacional}-{user_agent}"
     # Cria um objeto hash SHA-256
     hash_object = hashlib.sha256()
     # Atualiza o objeto hash com os dados combinados (codificados em bytes)
@@ -92,57 +120,141 @@ def block_user_for():
     New_fingerprint = hash_object.hexdigest()
 
 
-    # bloqueia os IPs que estiverem na black list ou na yellow list
+    # Add the user's IP address to the list yellow_list_IP
+    # if the request is more than a certain number of times
+
+    # bloqueia os IPs que estiverem na black list ou na yellow list e adiciona um comentario
     if ip_address in black_list_IP or ip_address in yellow_list_IP:
         coment = "IP esta em uma das listas de bloqueio" 
-        return abort(403)
+        return (True,coment)
+
+    # ------------------ request limits Now => is 5 ------------------
+    # Se não estiver em nenhuma lista, calcula a quantidade de requests 
+    # Se passar de um certo número de requests, bloqueia o acesso
+
+    # Dictionary to store the count of each IP address in the logs
+    ip_count = defaultdict(int)
+    for log in Logs:
+
+        ip = log['user_ip']
+        ip_count[ip] += 1
+        print(ip_count)
+
+    if ip_address in ip_count and ip_count[ip_address] > 5:
+        yellow_list_IP.append(ip_address)
+
 
     # bloqueia os agents que tenhan o nome "bot" ou "scraper"
     user_agent = request.headers.get('User-Agent')
     if "bot" in user_agent.lower() or "scraper" in user_agent.lower():
         coment = "bloquiado por causa do agente"
-        return abort(403)
+        return (True,coment)
     
     # se o agente for "headless" nao vai ter acesso ao site
     if "Headless" in user_agent:
         coment = "bloquiado por usar agente headless"
-        return abort(403)
-    
-    if ip_address not in access_log:
-        access_log[ip_address] = []
-    access_log[ip_address].append(request.path)
-    
-    # #  se passar o limite de request o ip vai ser bloqueado e adicionado na yellow list
-    # if len(access_log[ip_address]) > 100:  # Ajuste o limite conforme necessário
-    #     yellow_list_IP.append(request.remote_addr)
-    #     return abort(403)  # Bloqueia IPs com muitas requisições
-
+        return (True,coment)
     
 
+    # for log in Logs:
+    #     if log['user_ip'] == ip_address:
+    #        return (True,coment)
+
+    # cria e adicina o log
     log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
     log.create_log()
-    print(log)
+
+    return (False,coment)
+
 
     
 # -------------------------------- update_access_log and list_IPs--------------------------------
-def list_IPs_updated():
-
-    ip_address = request.remote_addr
-    if ip_address not in access_log:
-        access_log[ip_address] = []
-    # tempo_para_limpar = datetime.now() - timedelta(hours=6)
-
-    # for ip_user in access_log: 
-    #     if ip_user.current_time > tempo_para_limpar:
-    #         access_log[ip_address].remove("/endereco-de-processamento")
-    #         access_log[ip_address].remove("12:14:14")
-
-    # access_log[ip_address].append("/endereco-de-processamento")
-    # access_log[ip_address].append("12:14:14")
-    # access_log[ip_address].append("11:14:14")
+# def add_IP_list():
+#     user_ip = request.remote_addr
+    
 
 
-    return f"Access Log: {Logs}"
+#     user_info = {
+#             'user_ip': ip_address
+#         }
+
+#     # verifica se ja tem as informaçoes do usario
+#     # se nao adiciona as informaçoes no user_info
+#     if user_info not in User_information:
+#         User_information.append(user_info)
+    
+#     # generate a log
+#     log = {
+#         'user_ip': user_ip,
+#         'user_agent': user_agent,
+#     }
+#     Logs.append(log)
+    
+
+#     return f"user_ip: {user_ip}, user_agent: {user_agent}, logs list: {Logs}"
+
+
+
+# def list_IPs_updated():
+#     user_ip = request.remote_addr
+#     user_agent = request.headers.get('User-Agent')
+
+#     user_info = {
+#             'user_ip': "121.121.121.121",
+#             'user_agent': user_agent,
+#         }
+
+#     # verifica se ja tem as informaçoes do usario
+#     # se nao adiciona as informaçoes no user_info
+#     if user_info not in User_information:
+#         logs.append(user_info)
+    
+#     # generate a log
+#     log = {
+#         'user_ip': user_ip,
+#         'user_agent': user_agent,
+#     }
+#     logs.append(log)
+    
+
+#     return f"user_ip: {user_ip}, user_agent: {user_agent}, logs list: {logs}"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # ip_address = request.remote_addr
+    # if ip_address not in access_log:
+    #     access_log[ip_address] = []
+
+
+
+    # # tempo_para_limpar = datetime.now() - timedelta(hours=6)
+
+    # # for ip_user in access_log: 
+    # #     if ip_user.current_time > tempo_para_limpar:
+    # #         access_log[ip_address].remove("/endereco-de-processamento")
+    # #         access_log[ip_address].remove("12:14:14")
+
+    # # access_log[ip_address].append("/endereco-de-processamento")
+    # # access_log[ip_address].append("12:14:14")
+    # # access_log[ip_address].append("11:14:14")
+
+
+    # return f"Access Log: {Logs}"
 
 # -------------------------------- honneypot --------------------------------
 def trap_activated():
