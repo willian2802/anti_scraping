@@ -156,6 +156,11 @@ def block_user_for():
         return (True,coment)
     
 
+
+    # ------------------ fingerprint block ------------------
+
+
+
     # for log in Logs:
     #     if log['user_ip'] == ip_address:
     #        return (True,coment)
@@ -166,6 +171,29 @@ def block_user_for():
 
     return (False,coment)
 
+
+
+# modulos para adicionar
+
+# Função para verificar atividade suspeita
+def check_suspicious_activity(log):
+    ip_address = log['user_ip']
+    current_time = datetime.datetime.strptime(log['current_time'], "%Y-%m-%d %H:%M:%S")
+    user_agent = log['user_agent']
+    
+    # Regras de atividade suspeita
+    if 'scraper' in user_agent.lower() or 'bot' in user_agent.lower():
+        ban_user(ip_address, "User agent suspeito")
+        return True, "User agent suspeito"
+    
+    if ip_address in black_list_IP:
+        return False, "IP já está na lista de bloqueio"
+    
+    if ip_address in yellow_list_IP:
+        # Verifica se há muitas requisições em um curto período de tempo
+        if (current_time - last_request_time[ip_address]).total_seconds() < 10:
+            ban_user(ip_address, "Muitas requisições em um curto período de tempo")
+            return True, "Muitas requisições em um curto período de tempo"
 
     
 # -------------------------------- update_access_log and list_IPs--------------------------------
