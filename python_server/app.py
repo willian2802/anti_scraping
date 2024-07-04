@@ -3,6 +3,8 @@ from flask import Flask, request, abort
 from views import views
 from datetime import datetime, timedelta
 
+
+
 app = Flask(__name__)
 
 # para acessar essa pagina e "/views" se quizer depois acessar outra pagina /views/home etc...
@@ -48,17 +50,9 @@ def trap_activated():
     current_time = c.strftime('%H:%M:%S')
 
     #adiciona o ip na yellow list
-    yellow_list_IP.append(request.remote_addr)
+    yellow_list_IP.append(ip_address)
 
-
-    if ip_address not in access_log:
-        access_log[ip_address] = []
-    
-    # adiciona no access_log o path da requisição e o tempo da requisição
-    access_log[ip_address].append(request.path)
-    access_log[ip_address].append(current_time)
-
-    return f"{access_log}"
+    return f"Seu IP: {ip_address}, no horario: {current_time}, esta agora bloqueado de acessar o site"
 
 if __name__ == '__main__':
     app.run(debug=True)

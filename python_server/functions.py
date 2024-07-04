@@ -12,20 +12,8 @@ black_list_IP = ["192.168.0.1", "192.168.0.2"]
 yellow_list_IP = []
 green_list_IP = []
 
-# def remove_duplicates(black_list_IP, yellow_list_IP, green_list_IP):
+last_requests_time = {}
 
-#     black_list_IP = list(set(black_list_IP))
-#     yellow_list_IP = list(set(yellow_list_IP))
-#     green_list_IP = list(set(green_list_IP))
-
-#     black_list_IP = remove_duplicates(black_list_IP)
-#     yellow_list_IP = remove_duplicates(yellow_list_IP)
-#     green_list_IP = remove_duplicates(green_list_IP)
-
-#     return list(set(black_list_IP + yellow_list_IP + green_list_IP))
-
-
-access_log = {}  #dicionário para registrar as requisições
 
 User_information = []
 Logs = [{
@@ -129,6 +117,7 @@ def block_user_for():
         return (True,coment)
 
     # ------------------ request limits Now => is 5 ------------------
+
     # Se não estiver em nenhuma lista, calcula a quantidade de requests 
     # Se passar de um certo número de requests, bloqueia o acesso
 
@@ -138,10 +127,22 @@ def block_user_for():
 
         ip = log['user_ip']
         ip_count[ip] += 1
-        print(ip_count)
 
-    if ip_address in ip_count and ip_count[ip_address] > 5:
+        
+
+    if ip_count[ip_address] > 5: # limite de requisiçoes por IP
         yellow_list_IP.append(ip_address)
+
+    print(last_requests_time)
+    # print(last_requests_time[])
+
+    # for ultimos_request in last_requests_time:
+
+    #     if ultimos_request :
+
+
+    #     if (user_time - last_requests_time[ultimos_request]).total_seconds() > 10:
+        
 
 
     # bloqueia os agents que tenhan o nome "bot" ou "scraper"
@@ -157,13 +158,23 @@ def block_user_for():
     
 
 
-    # ------------------ fingerprint block ------------------
+    # ------------------ block requests com muitas requisições em um curto período de tempo ------------------
+
+    # print(last_requests_time[ip_address])
+
+    # for ultimo_request in last_requests_time:
+        
 
 
+    # if (user_time - last_requests_time)
 
-    # for log in Logs:
-    #     if log['user_ip'] == ip_address:
-    #        return (True,coment)
+    # if (user_time - last_requests_time[ip_address]).total_seconds() > 10:
+    #         print("Muitas requisições em um curto período de tempo")
+    #         coment = "Muitas requisições em um curto período de tempo"
+    #         return (True,coment)
+    
+    last_requests_time[ip_address] = user_time
+
 
     # cria e adicina o log
     log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
@@ -191,7 +202,7 @@ def check_suspicious_activity(log):
     
     if ip_address in yellow_list_IP:
         # Verifica se há muitas requisições em um curto período de tempo
-        if (current_time - last_request_time[ip_address]).total_seconds() < 10:
+        if (current_time - last_requests_time[ip_address]).total_seconds() < 10:
             ban_user(ip_address, "Muitas requisições em um curto período de tempo")
             return True, "Muitas requisições em um curto período de tempo"
 
@@ -248,59 +259,3 @@ def check_suspicious_activity(log):
 #     return f"user_ip: {user_ip}, user_agent: {user_agent}, logs list: {logs}"
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # ip_address = request.remote_addr
-    # if ip_address not in access_log:
-    #     access_log[ip_address] = []
-
-
-
-    # # tempo_para_limpar = datetime.now() - timedelta(hours=6)
-
-    # # for ip_user in access_log: 
-    # #     if ip_user.current_time > tempo_para_limpar:
-    # #         access_log[ip_address].remove("/endereco-de-processamento")
-    # #         access_log[ip_address].remove("12:14:14")
-
-    # # access_log[ip_address].append("/endereco-de-processamento")
-    # # access_log[ip_address].append("12:14:14")
-    # # access_log[ip_address].append("11:14:14")
-
-
-    # return f"Access Log: {Logs}"
-
-# -------------------------------- honneypot --------------------------------
-def trap_activated():
-    ip_address = request.remote_addr
-
-    # pega o tempo do request
-    c = datetime.now()
-    current_time = c.strftime('%H:%M:%S')
-
-    #adiciona o ip na yellow list
-    yellow_list_IP.append(request.remote_addr)
-
-
-    if ip_address not in access_log:
-        access_log[ip_address] = []
-    
-    # adiciona no access_log o path da requisição e o tempo da requisição
-    access_log[ip_address].append(request.path)
-    access_log[ip_address].append(current_time)
-
-    return f"{access_log}"
