@@ -12,7 +12,7 @@ black_list_IP = ["192.168.0.1", "192.168.0.2"]
 yellow_list_IP = []
 green_list_IP = []
 
-last_requests_time = {}
+user_log_history = []
 
 
 User_information = []
@@ -124,6 +124,7 @@ def block_user_for():
     # Dictionary to store the count of each IP address in the logs
     ip_count = defaultdict(int)
     for log in Logs:
+        
 
         ip = log['user_ip']
         ip_count[ip] += 1
@@ -133,15 +134,44 @@ def block_user_for():
     if ip_count[ip_address] > 5: # limite de requisiçoes por IP
         yellow_list_IP.append(ip_address)
 
-    print(last_requests_time)
-    # print(last_requests_time[])
+    print(user_log_history)
 
-    # for ultimos_request in last_requests_time:
+
+    limit = 0
+
+    log_request_limitis_list = {
+        'user_ip': ip_address,
+        'time': user_time,
+        "limit": limit 
+    }
+    user_log_history.append(log_request_limitis_list)
+
+    time_diference = (user_time - log_request_limitis_list[ip_address]).total_seconds()
+    last_request_time = user_time
+
+    if time_diference > 5
+        last_request_time["limit"] +=
+
+
+
+
+    for ultimo_request in user_log_history:
+        if (ultimo_request['time'] - (ultimo_request['time'] + 10) ).total_seconds() > 0:
+            limit += 1
+            print(limit)
+
+    # print(user_log_history[ip_address])
+    
+    
+
+    # for ultimo_request in user_log_history:
+        # ip_count[cuu]
 
     #     if ultimos_request :
 
+    
 
-    #     if (user_time - last_requests_time[ultimos_request]).total_seconds() > 10:
+    #     if (user_time - user_log_history[ultimos_request]).total_seconds() > 10:
         
 
 
@@ -160,20 +190,20 @@ def block_user_for():
 
     # ------------------ block requests com muitas requisições em um curto período de tempo ------------------
 
-    # print(last_requests_time[ip_address])
+    # print(user_log_history[ip_address])
 
-    # for ultimo_request in last_requests_time:
+    # for ultimo_request in user_log_history:
         
 
 
-    # if (user_time - last_requests_time)
+    # if (user_time - user_log_history)
 
-    # if (user_time - last_requests_time[ip_address]).total_seconds() > 10:
+    # if (user_time - user_log_history[ip_address]).total_seconds() > 10:
     #         print("Muitas requisições em um curto período de tempo")
     #         coment = "Muitas requisições em um curto período de tempo"
     #         return (True,coment)
     
-    last_requests_time[ip_address] = user_time
+    user_log_history[ip_address] = user_time
 
 
     # cria e adicina o log
@@ -202,7 +232,7 @@ def check_suspicious_activity(log):
     
     if ip_address in yellow_list_IP:
         # Verifica se há muitas requisições em um curto período de tempo
-        if (current_time - last_requests_time[ip_address]).total_seconds() < 10:
+        if (current_time - user_log_history[ip_address]).total_seconds() < 10:
             ban_user(ip_address, "Muitas requisições em um curto período de tempo")
             return True, "Muitas requisições em um curto período de tempo"
 
