@@ -1,8 +1,9 @@
+import re
 import hashlib
 import platform
 from collections import defaultdict
-from flask import Flask, request, abort
-from datetime import datetime, timedelta
+from flask import request
+from datetime import datetime
 import tkinter as tk
 
 
@@ -12,10 +13,19 @@ black_list_IP = ["192.168.0.1", "192.168.0.2"]
 yellow_list_IP = []
 green_list_IP = []
 
+# Dicionário para armazenar a última requisição de cada IP, o fingerprint do IP e o limite
+# limite = numero de vezes em que o IP pode fazer requisições em um curto perido de horário
+# antes de ser bloquiado
+last_request_time = {}
+fingerprint_list = {}
+request_limits = defaultdict(int)
+
+
+# informaçoes individuais de usuario
 user_log_history = []
-
-
 User_information = []
+
+
 Logs = [{
     'current_time': '00:00:00',
     'user_ip': '127.0.0.1',
@@ -51,26 +61,16 @@ class Request_Log:
     
     def show_all(self):
         return (Logs)
-
-
-    # def remove(self):
-    #     access_log[self.ip_address].remove(self.path)
         
 
-# --------------------------- fingerprint ---------------------------
-
-
-
-    # log = Request_Log(user_time, user_Ip, request.path, user_agent, fingerprint)
-    # log.create_log()
-
-    # return(Logs)
 
 # --------------------------- block bots ---------------------------
 
 def block_user_for():
 
-    # pega o IP o  user_agent a o tempo do request etc...
+    # ------------------ informaçoes da requisição ------------------
+
+    # pega o IP o user_agent o tempo do request etc...
     ip_address = request.remote_addr
     user_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     PATH = request.path
@@ -107,134 +107,119 @@ def block_user_for():
     # Obtém o hash hexadecimal
     New_fingerprint = hash_object.hexdigest()
 
+    # ------------------ block requests com muitas requisições em um curto período de tempo e verifica o fingerprint ------------------
 
-    # Add the user's IP address to the list yellow_list_IP
-    # if the request is more than a certain number of times
+    # Obtendo o tempo atual como objeto datetime
+    # nao funciona pegando o user_time 
+    tempo_atual = datetime.now()
+    
+    if ip_address not in last_request_time:
+        last_request_time[ip_address] = tempo_atual.strftime('%Y-%m-%d %H:%M:%S')
+        request_limits[ip_address] = 0
+        fingerprint_list[ip_address] = New_fingerprint
+    else:
+        # se o fingerprint da ultima requisição for diferente do 
+        # fingerprint que o usuario esta usando agora Blockeia o acesso e adiciona na yellow_list
+        if fingerprint_list[ip_address] != New_fingerprint:
+            coment = "Por favor so acesse o site com o dispositivo que voce acessou na primeira vez"
+            yellow_list_IP.append(ip_address)
+            # cria e adicina o log
+            log = Request_Log(tempo_atual, ip_address, PATH, user_agent, New_fingerprint, coment)
+            log.create_log()
+            # O true indica que o acesso nao passou na verificaçao de segurança
+            return (True,coment)
+
+        # Convertendo last_request_time[ip_address] para objeto datetime
+        last_request_time_ip = datetime.strptime(last_request_time[ip_address], '%Y-%m-%d %H:%M:%S')
+        
+        # Calculando a diferença de tempo em segundos
+        time_difference = (tempo_atual - last_request_time_ip).total_seconds()
+        
+        # Atualizando last_request_time[ip_address] para o tempo atual
+        last_request_time[ip_address] = tempo_atual.strftime('%Y-%m-%d %H:%M:%S')
+
+
+    #Nota: no futuro modificar para o contador tambem usar o fingerprint nao so o IP bloquiar o acesso
+        # Se a diferença de tempo for menor que 10 segundos
+        if time_difference < 10:
+            request_limits[ip_address] += 1
+
+            # limite de vezes em que a requisiçao pode passar dos segundos minimos entre requisiçoes
+            if request_limits[ip_address] > 5:
+                coment = "bloqueado por enviar multiplos requests em um curto periodo de tempo"
+                yellow_list_IP.append(ip_address)
+                # cria e adicina o log
+                log = Request_Log(tempo_atual, ip_address, PATH, user_agent, New_fingerprint, coment)
+                log.create_log()
+                # O true indica que o acesso nao passou na verificaçao de segurança
+                return (True,coment)
+        else:
+            # Resetar o limite se a diferença de tempo for maior ou igual a 10 segundos
+            request_limits[ip_address] = 0
+
+    # ------------------ request limits Now => is 10 ------------------    
+
+    # Se passar de um certo número de requests, bloqueia o acesso
+    # Dicionario para armazenar o numero de requisições por IP
+    ip_count = defaultdict(int)
+    for log in Logs:
+        
+        ip = log['user_ip']
+        ip_count[ip] += 1
+
+    if ip_count[ip_address] > 10: # limite de requisiçoes por IP atualment => 10
+        coment = "Chegou a quantidade maxima de requisições por IP"
+        yellow_list_IP.append(ip_address)
+        # cria e adicina o log
+        log = Request_Log(tempo_atual, ip_address, PATH, user_agent, New_fingerprint, coment)
+        log.create_log()
+        # O true indica que o acesso nao passou na verificaçao de segurança
+        return (True,coment)
+        
+
+    # ------------------ Agent blocker ------------------    
+    # bloqueia os agents que tenhan o nome "bot" ou "scraper"
+    user_agent = request.headers.get('User-Agent')
+    if re.search(r'\bbot\b', user_agent, re.IGNORECASE) or re.search(r'\bscraper\b', user_agent, re.IGNORECASE):
+        coment = "bloquiado por usar bots ou por scraping"
+        # cria e adicina o log
+        log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
+        log.create_log()
+        return (True,coment)
+    
+    # se o agente for "headless" nao vai ter acesso ao site
+    if re.search(r'\bheadless\b', user_agent, re.IGNORECASE):
+        coment = "bloquiado por usar agente headless"
+        # cria e adicina o log
+        log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
+        log.create_log()
+        # O true indica que o acesso nao passou na verificaçao de segurança
+        return (True,coment)
+    
+
+    # ------------------ verifica se o IP esta em uma das listas ------------------    
 
     # bloqueia os IPs que estiverem na black list ou na yellow list e adiciona um comentario
     if ip_address in black_list_IP or ip_address in yellow_list_IP:
         coment = "IP esta em uma das listas de bloqueio" 
+
+        # cria e adicina o log
+        log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
+        log.create_log()
+        
+        # O true indica que o acesso nao passou na verificaçao de segurança
         return (True,coment)
 
-    # ------------------ request limits Now => is 5 ------------------
-
-    # Se não estiver em nenhuma lista, calcula a quantidade de requests 
-    # Se passar de um certo número de requests, bloqueia o acesso
-
-    # Dictionary to store the count of each IP address in the logs
-    ip_count = defaultdict(int)
-    for log in Logs:
-        
-
-        ip = log['user_ip']
-        ip_count[ip] += 1
-
-        
-
-    if ip_count[ip_address] > 5: # limite de requisiçoes por IP
-        yellow_list_IP.append(ip_address)
-
-    print(user_log_history)
-
-
-    limit = 0
-
-    log_request_limitis_list = {
-        'user_ip': ip_address,
-        'time': user_time,
-        "limit": limit 
-    }
-    user_log_history.append(log_request_limitis_list)
-
-    time_diference = (user_time - log_request_limitis_list[ip_address]).total_seconds()
-    last_request_time = user_time
-
-    if time_diference > 5
-        last_request_time["limit"] +=
-
-
-
-
-    for ultimo_request in user_log_history:
-        if (ultimo_request['time'] - (ultimo_request['time'] + 10) ).total_seconds() > 0:
-            limit += 1
-            print(limit)
-
-    # print(user_log_history[ip_address])
-    
-    
-
-    # for ultimo_request in user_log_history:
-        # ip_count[cuu]
-
-    #     if ultimos_request :
-
-    
-
-    #     if (user_time - user_log_history[ultimos_request]).total_seconds() > 10:
-        
-
-
-    # bloqueia os agents que tenhan o nome "bot" ou "scraper"
-    user_agent = request.headers.get('User-Agent')
-    if "bot" in user_agent.lower() or "scraper" in user_agent.lower():
-        coment = "bloquiado por causa do agente"
-        return (True,coment)
-    
-    # se o agente for "headless" nao vai ter acesso ao site
-    if "Headless" in user_agent:
-        coment = "bloquiado por usar agente headless"
-        return (True,coment)
-    
-
-
-    # ------------------ block requests com muitas requisições em um curto período de tempo ------------------
-
-    # print(user_log_history[ip_address])
-
-    # for ultimo_request in user_log_history:
-        
-
-
-    # if (user_time - user_log_history)
-
-    # if (user_time - user_log_history[ip_address]).total_seconds() > 10:
-    #         print("Muitas requisições em um curto período de tempo")
-    #         coment = "Muitas requisições em um curto período de tempo"
-    #         return (True,coment)
-    
-    user_log_history[ip_address] = user_time
-
+    # ------------------ no final de tudo ------------------    
+     
+    # se o acesso passou por todas as verificacoes, o acesso pode ser autorizado
+    coment = "Acesso autorizado"
 
     # cria e adicina o log
     log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
     log.create_log()
-
+    # O false indica que o acesso passou na verificaçao de segurança
     return (False,coment)
-
-
-
-# modulos para adicionar
-
-# Função para verificar atividade suspeita
-def check_suspicious_activity(log):
-    ip_address = log['user_ip']
-    current_time = datetime.datetime.strptime(log['current_time'], "%Y-%m-%d %H:%M:%S")
-    user_agent = log['user_agent']
-    
-    # Regras de atividade suspeita
-    if 'scraper' in user_agent.lower() or 'bot' in user_agent.lower():
-        ban_user(ip_address, "User agent suspeito")
-        return True, "User agent suspeito"
-    
-    if ip_address in black_list_IP:
-        return False, "IP já está na lista de bloqueio"
-    
-    if ip_address in yellow_list_IP:
-        # Verifica se há muitas requisições em um curto período de tempo
-        if (current_time - user_log_history[ip_address]).total_seconds() < 10:
-            ban_user(ip_address, "Muitas requisições em um curto período de tempo")
-            return True, "Muitas requisições em um curto período de tempo"
 
     
 # -------------------------------- update_access_log and list_IPs--------------------------------
