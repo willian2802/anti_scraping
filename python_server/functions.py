@@ -4,12 +4,15 @@ import platform
 from collections import defaultdict
 from flask import request
 from datetime import datetime
-import tkinter as tk
+# import tkinter as tk
+
+# to use this i need to install screeninfo
+# from screeninfo import get_monitors
 
 
 # +--------------------------- lists ---------------------------
 
-black_list_IP = ["192.168.0.1", "192.168.0.2"]
+black_list_IP = ["192.168.0.44", "192.168.0.75"]
 yellow_list_IP = []
 green_list_IP = []
 
@@ -81,25 +84,34 @@ def block_user_for():
     coment = "None"
 
 
+
+    # ------------------ pega o tamanho da tela do usuario ------------------
+    # monitors = get_monitors()
+    # if monitors:
+    #     tamanho_tela = (monitors[0].width, monitors[0].height)
+    # else:
+    #     tamanho_tela = (0, 0)
+
+
     # ------------------ pega o tamanho da tela do usario ------------------
-    # Cria uma instância da janela Tkinter
-    root = tk.Tk()
+    # # Cria uma instância da janela Tkinter
+    # root = tk.Tk()
 
-    # Obtém a largura e altura da tela
-    largura_tela = root.winfo_screenwidth()
-    altura_tela = root.winfo_screenheight()
+    # # Obtém a largura e altura da tela
+    # largura_tela = root.winfo_screenwidth()
+    # altura_tela = root.winfo_screenheight()
 
-    # Fecha a janela Tkinter
-    root.destroy()
+    # # Fecha a janela Tkinter
+    # root.destroy()
 
-    # Armazena o tamanho da tela na variável
-    tamanho_tela = (largura_tela, altura_tela)
+    # # Armazena o tamanho da tela na variável
+    # tamanho_tela = (largura_tela, altura_tela)
 
 
     # ------------------ Create finger-print ------------------
      
     # Combina os dois IPs em uma única string
-    combined_data = f"{tamanho_tela}-{sistema_operacional}-{user_agent}"
+    combined_data = f"{sistema_operacional}-{user_agent}"
     # Cria um objeto hash SHA-256
     hash_object = hashlib.sha256()
     # Atualiza o objeto hash com os dados combinados (codificados em bytes)
@@ -201,7 +213,7 @@ def block_user_for():
 
     # bloqueia os IPs que estiverem na black list ou na yellow list e adiciona um comentario
     if ip_address in black_list_IP or ip_address in yellow_list_IP:
-        coment = "IP esta em uma das listas de bloqueio" 
+        coment = "IP esta em uma das listas de bloqueio"
 
         # cria e adicina o log
         log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)

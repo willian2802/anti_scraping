@@ -23,6 +23,7 @@ def render_index():
     return render_template('index.html')
 
 
+# renderiza o visualizador de Logs
 @views.route('/nothing_here')
 def logs_console():
 
