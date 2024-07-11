@@ -4,6 +4,8 @@ import platform
 from collections import defaultdict
 from flask import request
 from datetime import datetime
+from functools import wraps
+
 # import tkinter as tk
 
 # to use this i need to install screeninfo
@@ -64,8 +66,26 @@ class Request_Log:
     
     def show_all(self):
         return (Logs)
-        
+    
+# ------------------------------ autenticação --------------------------------
 
+# Função de verificação de autenticação
+
+#verifica se a chave 'authenticated' está presente no dicionário session. 
+# Se estiver presente, significa que o usuário está autenticado. 
+# A sessão é um dicionário que o Flask usa para armazenar dados entre requisições.
+def is_authenticated():
+    return 'authenticated' in session
+
+
+# um decoder usando isso adicionamos funçoes a mais e uma funçao ja existente
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not is_authenticated():
+            return redirect(url_for('views'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # --------------------------- block bots ---------------------------
 
@@ -222,7 +242,7 @@ def block_user_for():
         # O true indica que o acesso nao passou na verificaçao de segurança
         return (True,coment)
 
-    # ------------------ no final de tudo ------------------    
+# ------------------ no final de tudo ------------------    
      
     # se o acesso passou por todas as verificacoes, o acesso pode ser autorizado
     coment = "Acesso autorizado"
@@ -284,5 +304,4 @@ def block_user_for():
     
 
 #     return f"user_ip: {user_ip}, user_agent: {user_agent}, logs list: {logs}"
-
 

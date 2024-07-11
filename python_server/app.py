@@ -29,42 +29,20 @@ def submit_captcha():
     return jsonify({'status': 'success'})
 
 
-
-# Função de verificação de autenticação
-
-#verifica se a chave 'authenticated' está presente no dicionário session. 
-# Se estiver presente, significa que o usuário está autenticado. 
-# A sessão é um dicionário que o Flask usa para armazenar dados entre requisições.
-def is_authenticated():
-    return 'authenticated' in session
-
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not is_authenticated():
-            return redirect(url_for('views'))
-        return f(*args, **kwargs)
-    return decorated_function
-
-
-@app.route('/views', methods=['GET', 'POST'])
-def views():
+@app.route('/views', methods=['POST'])
+def if_is_authneiticated():
     if request.method == 'POST':
-        captcha = request.form.get('captchahash')
+            # pega a resposta do captcha do usuario
+            data = request.get_json()
+            user_text = data.get('userText')
 
-        # Aqui você deve implementar sua lógica de autenticação
-        # Por exemplo, verificar o usuário e a senha
-        # Se autenticado com sucesso:
-        session['authenticated'] = True
-        return redirect(url_for('home'))
-    return '''
-        <form method="post">
-            <p><input type=text name=username>
-            <p><input type=password name=password>
-            <p><input type=submit value=Login>
-        </form>
-    '''
-
+            if user_text == '':
+                session['authenticated'] = False
+                return redirect(url_for('/views/cofe_shop'))   
+            else:           
+                # Se autenticado com sucesso:
+                session['authenticated'] = True
+    
 # -------------------------------- Console log --------------------------------
 
 # qualquer um que entrar nesse endereço o servidor vai enviar os Logs para ele
