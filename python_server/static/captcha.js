@@ -47,13 +47,16 @@ function check_captcha() {
         output.className = "correctCaptcha";
         output.innerHTML = "Correct!";
 
+        // checa se o captcha foi correto
+        right_captcha = true
+
         // Envia o valor do userText para o servidor Python
         fetch('/submit_captcha', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ userText: userText.value })
+            body: JSON.stringify({ userText: userText.value, right_captcha: right_captcha })
         })
         
         // adiciona um button com o link do site real

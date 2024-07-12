@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request
-from functions import block_user_for
+from functions import block_user_for, login_required
 
 views = Blueprint(__name__, 'views')
 
@@ -30,6 +30,9 @@ def logs_console():
     return render_template('nothing_here.html')
     
 @views.route('/cofe_shop')
+# antes de ativar a funçao, ele vai rodar a funçao Login_required
+# que verifica se o usuario foi autenticado se sim ele passa se nao ele volta pro index que e o captcha
+@login_required
 def cofe_page():
     # roda as funçoes que verificao se e um bot ou nao se for entao bloqueia o acesso
     block_user_for()

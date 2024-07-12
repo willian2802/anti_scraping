@@ -2,7 +2,7 @@ import re
 import hashlib
 import platform
 from collections import defaultdict
-from flask import request
+from flask import request, session, redirect, url_for
 from datetime import datetime
 from functools import wraps
 
@@ -78,12 +78,12 @@ def is_authenticated():
     return 'authenticated' in session
 
 
-# um decoder usando isso adicionamos funçoes a mais e uma funçao ja existente
+# um decoder usando isso adicionamos funçoes a mais em uma funçao ja existente
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not is_authenticated():
-            return redirect(url_for('views'))
+            return redirect(url_for('views.render_index'))
         return f(*args, **kwargs)
     return decorated_function
 

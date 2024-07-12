@@ -20,28 +20,29 @@ from functions import yellow_list_IP, green_list_IP, black_list_IP
 
 # +--------------------------- autenticação ---------------------------
 
-@app.route('/submit_captcha', methods=['POST'])
-def submit_captcha():
-    data = request.get_json()
-    user_text = data.get('userText')
-    # Processa o user_text como necessário
-    print(f"Received user text: {user_text}")
-    return jsonify({'status': 'success'})
+# @app.route('/submit_captcha', methods=['POST'])
+# def submit_captcha():
 
+#     print("submit_captcha is on!!!") 
 
-@app.route('/views', methods=['POST'])
-def if_is_authneiticated():
-    if request.method == 'POST':
-            # pega a resposta do captcha do usuario
-            data = request.get_json()
-            user_text = data.get('userText')
+#     if request.method == 'POST':
+#         # pega a resposta do captcha do usuario    
+#         data = request.get_json()
+#         # reposta do captcha do usuario
+#         user_text = data.get('userText')
+#         right_captcha = data.get('right_captcha')
 
-            if user_text == '':
-                session['authenticated'] = False
-                return redirect(url_for('/views/cofe_shop'))   
-            else:           
-                # Se autenticado com sucesso:
-                session['authenticated'] = True
+#         print(user_text)
+        # Se autenticado com sucesso:
+        
+#         if right_captcha == True:
+#             
+#             session['authenticated'] = True
+#             return('captcha autenticado com sucesso')
+#         else:
+#             session['authenticated'] = False
+#             return redirect(url_for('views.render_index'))
+            
     
 # -------------------------------- Console log --------------------------------
 
