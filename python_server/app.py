@@ -42,7 +42,6 @@ from functions import yellow_list_IP, green_list_IP, black_list_IP
 #         else:
 #             session['authenticated'] = False
 #             return redirect(url_for('views.render_index'))
-            
     
 # -------------------------------- Console log --------------------------------
 

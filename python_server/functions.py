@@ -1,6 +1,4 @@
-import re
-import hashlib
-import platform
+import hashlib, platform, os, re
 from collections import defaultdict
 from flask import request, session, redirect, url_for
 from datetime import datetime
@@ -112,26 +110,17 @@ def block_user_for():
     # else:
     #     tamanho_tela = (0, 0)
 
+    # Informações da CPU
+    cpu_info = platform.processor()
 
-    # ------------------ pega o tamanho da tela do usario ------------------
-    # # Cria uma instância da janela Tkinter
-    # root = tk.Tk()
-
-    # # Obtém a largura e altura da tela
-    # largura_tela = root.winfo_screenwidth()
-    # altura_tela = root.winfo_screenheight()
-
-    # # Fecha a janela Tkinter
-    # root.destroy()
-
-    # # Armazena o tamanho da tela na variável
-    # tamanho_tela = (largura_tela, altura_tela)
+    # Idioma do Sistema
+    idioma_sistema = os.getenv('LANG', 'Unknown')
 
 
     # ------------------ Create finger-print ------------------
      
     # Combina os dois IPs em uma única string
-    combined_data = f"{sistema_operacional}-{user_agent}"
+    combined_data = f"{idioma_sistema}-{cpu_info}-{sistema_operacional}"
     # Cria um objeto hash SHA-256
     hash_object = hashlib.sha256()
     # Atualiza o objeto hash com os dados combinados (codificados em bytes)
