@@ -1,5 +1,6 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, redirect, url_for, session
 from functions import block_user_for, login_required
+
 
 views = Blueprint(__name__, 'views')
 
@@ -7,7 +8,37 @@ views = Blueprint(__name__, 'views')
 # black_list_IP = []
 # yellow_list_IP = []
 
+
+
+# +--------------------------- autenticação ---------------------------
+
+# @views.route('/submit_captcha', methods=['POST'])
+# def submit_captcha():
+
+#     print("submit_captcha is on!!!") 
+
+#     if request.method == 'POST':
+#         # pega a resposta do captcha do usuario    
+#         data = request.get_json()
+#         # reposta do captcha do usuario
+#         user_text = data.get('userText')
+#         right_captcha = data.get('right_captcha')
+
+#         print(user_text)
+#         print(right_captcha)
+#         # Se autenticado com sucesso
+        
+#         if right_captcha == True:
+            
+#             session['authenticated'] = True
+#             return('captcha autenticado com sucesso')
+#         else:
+#             session['authenticated'] = False
+#             return redirect(url_for('views.render_index'))
+
+
 @views.route('/')
+@login_required
 def render_index():
 
     # roda as funçoes que verificao se e um bot ou nao se for entao bloqueia o acesso

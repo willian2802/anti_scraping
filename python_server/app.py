@@ -18,7 +18,7 @@ app.register_blueprint(views, url_prefix='/views')
 from functions import yellow_list_IP, green_list_IP, black_list_IP
 
 
-# +--------------------------- autenticação ---------------------------
+# # +--------------------------- autenticação ---------------------------
 
 # @app.route('/submit_captcha', methods=['POST'])
 # def submit_captcha():
@@ -33,16 +33,17 @@ from functions import yellow_list_IP, green_list_IP, black_list_IP
 #         right_captcha = data.get('right_captcha')
 
 #         print(user_text)
-        # Se autenticado com sucesso:
+#         print(right_captcha)
+#         # Se autenticado com sucesso
         
 #         if right_captcha == True:
-#             
+            
 #             session['authenticated'] = True
 #             return('captcha autenticado com sucesso')
 #         else:
 #             session['authenticated'] = False
 #             return redirect(url_for('views.render_index'))
-    
+
 # -------------------------------- Console log --------------------------------
 
 # qualquer um que entrar nesse endereço o servidor vai enviar os Logs para ele

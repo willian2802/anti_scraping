@@ -3,10 +3,11 @@ from collections import defaultdict
 from flask import request, session, redirect, url_for
 from datetime import datetime
 from functools import wraps
+from geopy.geocoders import Nominatim
 
 # import tkinter as tk
 
-# to use this i need to install screeninfo
+# to use this i need to install screeninfo and geopy
 # from screeninfo import get_monitors
 
 
@@ -64,6 +65,22 @@ class Request_Log:
     
     def show_all(self):
         return (Logs)
+
+
+# ------------------------------ Geolocalização --------------------------------
+
+# def get_ip_location(ip_address):
+#     geolocator = Nominatim(user_agent="geoapiExercises")
+#     location = geolocator.geocode(ip_address)
+    
+#     if location:
+#         print("Country:", location.raw['display_name'].split(",")[-1].strip())
+#         print("Continent:", location.raw['display_name'].split(",")[-2].strip())
+#     else:
+#         print("Location not found for the IP address.")
+
+# # Example usage
+# get_ip_location("8.8.8.8")
     
 # ------------------------------ autenticação --------------------------------
 
@@ -78,9 +95,12 @@ def is_authenticated():
 
 # um decoder usando isso adicionamos funçoes a mais em uma funçao ja existente
 def login_required(f):
+    print("login required is on!!!")
+
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not is_authenticated():
+            print("login required not authenticated!!!")
             return redirect(url_for('views.render_index'))
         return f(*args, **kwargs)
     return decorated_function
