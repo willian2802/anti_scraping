@@ -1,6 +1,5 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session
-from functions import block_user_for, login_required
-
+from flask import Blueprint, render_template, request
+from functions import block_user_for,login_required
 
 views = Blueprint(__name__, 'views')
 
@@ -9,36 +8,7 @@ views = Blueprint(__name__, 'views')
 # yellow_list_IP = []
 
 
-
-# +--------------------------- autenticação ---------------------------
-
-# @views.route('/submit_captcha', methods=['POST'])
-# def submit_captcha():
-
-#     print("submit_captcha is on!!!") 
-
-#     if request.method == 'POST':
-#         # pega a resposta do captcha do usuario    
-#         data = request.get_json()
-#         # reposta do captcha do usuario
-#         user_text = data.get('userText')
-#         right_captcha = data.get('right_captcha')
-
-#         print(user_text)
-#         print(right_captcha)
-#         # Se autenticado com sucesso
-        
-#         if right_captcha == True:
-            
-#             session['authenticated'] = True
-#             return('captcha autenticado com sucesso')
-#         else:
-#             session['authenticated'] = False
-#             return redirect(url_for('views.render_index'))
-
-
 @views.route('/')
-@login_required
 def render_index():
 
     # roda as funçoes que verificao se e um bot ou nao se for entao bloqueia o acesso
@@ -57,13 +27,12 @@ def render_index():
 # renderiza o visualizador de Logs
 @views.route('/nothing_here')
 def logs_console():
-
     return render_template('nothing_here.html')
     
 @views.route('/cofe_shop')
+@login_required
 # antes de ativar a funçao, ele vai rodar a funçao Login_required
 # que verifica se o usuario foi autenticado se sim ele passa se nao ele volta pro index que e o captcha
-@login_required
 def cofe_page():
     # roda as funçoes que verificao se e um bot ou nao se for entao bloqueia o acesso
     block_user_for()

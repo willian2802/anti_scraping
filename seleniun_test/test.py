@@ -145,11 +145,50 @@ def test_agensts_detection():
     except Exception as e:
         print(f"An error occurred: {e}")
 
+# Lista de proxies organizados por país
+proxies = {
+    "France": "fr.proxy.example:8080",
+    "Italy": "it.proxy.example:8080",
+    "Brazil": "br.proxy.example:8080",
+    "China": "cn.proxy.example:8080"
+}
+
+# Configurar o proxy
+def configure_proxy(country):
+    proxy = Proxy()
+    proxy.proxy_type = ProxyType.MANUAL
+    proxy.http_proxy = proxies[country]
+    proxy.ssl_proxy = proxies[country]
+    capabilities = webdriver.DesiredCapabilities.CHROME
+    proxy.add_to_capabilities(capabilities)
+    return capabilities
+
+
+# Acessar o site por determinado país
+def test_acesso_por_pais(country, url):
+    capabilities = configure_proxy(country)
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, desired_capabilities=capabilities)
+    
+    try:
+        driver.get(url)
+        print(f"Accessed {url} from {country}")
+    except Exception as e:
+        print(f"Failed to access {url} from {country}: {e}")
+    finally:
+        driver.quit()
+
+if __name__ == "__main__":
+    url = "http://www.example.com"
+    for country in proxies.keys():
+        test_acesso_por_pais(country, url)
+
 
 # Executar o teste
 # test_honeypot()
 # test_multiple_request()
-test_agensts_detection()
+# test_agensts_detection()
+test_acesso_por_pais('BR', 'http://www.example.com')
 
 
 

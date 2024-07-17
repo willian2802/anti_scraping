@@ -81,7 +81,7 @@ class Request_Log:
 
 # # Example usage
 # get_ip_location("8.8.8.8")
-    
+
 # ------------------------------ autenticação --------------------------------
 
 # Função de verificação de autenticação

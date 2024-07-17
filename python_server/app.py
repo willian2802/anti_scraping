@@ -20,29 +20,26 @@ from functions import yellow_list_IP, green_list_IP, black_list_IP
 
 # # +--------------------------- autenticação ---------------------------
 
-# @app.route('/submit_captcha', methods=['POST'])
-# def submit_captcha():
+@app.route('/submit_captcha', methods=['POST'])
+def submit_captcha():
 
-#     print("submit_captcha is on!!!") 
+    print("submit_captcha is on!!!") 
 
-#     if request.method == 'POST':
-#         # pega a resposta do captcha do usuario    
-#         data = request.get_json()
-#         # reposta do captcha do usuario
-#         user_text = data.get('userText')
-#         right_captcha = data.get('right_captcha')
+    if request.method == 'POST':
+        # pega a resposta do captcha do usuario    
+        data = request.get_json()
+        # reposta do captcha do usuario
+        user_text = data.get('userText')
+        right_captcha = data.get('right_captcha')
 
-#         print(user_text)
-#         print(right_captcha)
-#         # Se autenticado com sucesso
+        print(user_text)
+        print(right_captcha)
+        # Se autenticado com sucesso
         
-#         if right_captcha == True:
-            
-#             session['authenticated'] = True
-#             return('captcha autenticado com sucesso')
-#         else:
-#             session['authenticated'] = False
-#             return redirect(url_for('views.render_index'))
+        if right_captcha == True:
+            print("autenticado")
+            session['authenticated'] = True
+            return('captcha autenticado com sucesso')
 
 # -------------------------------- Console log --------------------------------
 
