@@ -3,7 +3,11 @@ from collections import defaultdict
 from flask import request, session, redirect, url_for
 from datetime import datetime
 from functools import wraps
-from geopy.geocoders import Nominatim
+
+# geolication
+import socket,requests
+from ip2geotools.databases.noncommercial import DbIpCity
+from geopy.distance import distance
 
 # import tkinter as tk
 
@@ -16,6 +20,8 @@ from geopy.geocoders import Nominatim
 black_list_IP = ["192.168.0.44", "192.168.0.75"]
 yellow_list_IP = []
 green_list_IP = []
+
+contry_black_list = ["China","India","Brazil","Russia"]
 
 # Dicionário para armazenar a última requisição de cada IP, o fingerprint do IP e o limite
 # limite = numero de vezes em que o IP pode fazer requisições em um curto perido de horário
@@ -69,18 +75,12 @@ class Request_Log:
 
 # ------------------------------ Geolocalização --------------------------------
 
-# def get_ip_location(ip_address):
-#     geolocator = Nominatim(user_agent="geoapiExercises")
-#     location = geolocator.geocode(ip_address)
-    
-#     if location:
-#         print("Country:", location.raw['display_name'].split(",")[-1].strip())
-#         print("Continent:", location.raw['display_name'].split(",")[-2].strip())
-#     else:
-#         print("Location not found for the IP address.")
+def get_ip_location(ip):
+    res = DbIpCity.get(ip, api_key="free")
+    print(f"IP Address: {res.ip_address}")
+    print(f"Location: {res.city}, {res.region}, {res.country}")
+    print(f"Coordinates: (Lat: {res.latitude}, Lng: {res.longitude})")
 
-# # Example usage
-# get_ip_location("8.8.8.8")
 
 # ------------------------------ autenticação --------------------------------
 
@@ -260,6 +260,9 @@ def block_user_for():
     log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
     log.create_log()
     # O false indica que o acesso passou na verificaçao de segurança
+    # Test the function with an example IP address
+    get_ip_location("198.35.26.96")
+
     return (False,coment)
 
     
