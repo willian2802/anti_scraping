@@ -5,15 +5,14 @@ from datetime import datetime
 from functools import wraps
 
 # geolication
-import socket,requests
-from ip2geotools.databases.noncommercial import DbIpCity
-from geopy.distance import distance
+import requests
+import json
+
 
 # import tkinter as tk
 
 # to use this i need to install screeninfo and geopy
 # from screeninfo import get_monitors
-
 
 # +--------------------------- lists ---------------------------
 
@@ -76,10 +75,24 @@ class Request_Log:
 # ------------------------------ Geolocalização --------------------------------
 
 def get_ip_location(ip):
-    res = DbIpCity.get(ip, api_key="free")
-    print(f"IP Address: {res.ip_address}")
-    print(f"Location: {res.city}, {res.region}, {res.country}")
-    print(f"Coordinates: (Lat: {res.latitude}, Lng: {res.longitude})")
+    ip_to_locate = ip
+    request_url = 'https://geolocation-db.com/jsonp/' + ip_to_locate
+
+    try:
+        response = requests.get(request_url)
+    except e:
+        # Handle the error here, e.g. log the error or return a default value
+        print("Invalid JSON string")
+        return None
+
+    result = response.content.decode()
+    result = result.split("(")[1].strip(")")
+    result = json.loads(result)
+
+    # apenas o country_name and city
+    country_name = result.get('country_name')
+    city = result.get('city')
+    return country_name, city
 
 
 # ------------------------------ autenticação --------------------------------
@@ -112,11 +125,14 @@ def block_user_for():
     # ------------------ informaçoes da requisição ------------------
 
     # pega o IP o user_agent o tempo do request etc...
-    ip_address = request.remote_addr
+    ip_address = "165.141.121.43"
     user_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     PATH = request.path
     user_agent = request.headers.get('User-Agent')
-    sistema_operacional = platform.system()
+
+    # ------------------ informaçoes de localidade ------------------
+    country, city = get_ip_location(ip_address)
+    print(f"Country: {country}, City: {city}")
     
     # uma descriçao para o log ou outras informaçoes uteis
     coment = "None"
@@ -130,15 +146,16 @@ def block_user_for():
     # else:
     #     tamanho_tela = (0, 0)
 
+    # ------------------ Create finger-print ------------------
     # Informações da CPU
     cpu_info = platform.processor()
-
+    # Versão do SO
+    sistema_operacional = platform.system()
     # Idioma do Sistema
     idioma_sistema = os.getenv('LANG', 'Unknown')
-
-
-    # ------------------ Create finger-print ------------------
      
+
+
     # Combina os dois IPs em uma única string
     combined_data = f"{idioma_sistema}-{cpu_info}-{sistema_operacional}"
     # Cria um objeto hash SHA-256
@@ -147,6 +164,17 @@ def block_user_for():
     hash_object.update(combined_data.encode('utf-8'))
     # Obtém o hash hexadecimal
     New_fingerprint = hash_object.hexdigest()
+
+
+    # ------------------ block Location ------------------    
+    # bloquei o acesso de acordo com as informações de localidade
+    
+    if country in contry_black_list:
+        coment = "Acesso nao autorestrito ao pais em que voce esta localizado"
+        # cria e adicina o log
+        log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
+        log.create_log()
+        return (True,coment)
 
     # ------------------ block requests com muitas requisições em um curto período de tempo e verifica o fingerprint ------------------
 
@@ -261,7 +289,8 @@ def block_user_for():
     log.create_log()
     # O false indica que o acesso passou na verificaçao de segurança
     # Test the function with an example IP address
-    get_ip_location("198.35.26.96")
+    
+    # get_ip_location("198.35.26.96")
 
     return (False,coment)
 
