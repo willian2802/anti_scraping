@@ -22,6 +22,26 @@ green_list_IP = []
 
 contry_black_list = ["China","India","Brazil","Russia"]
 
+
+# dicionário para armazenar os IPs e seus atributos
+ip_data = {
+    '192.128.5.21': {
+        'fingerprint': 'abc123',
+        'location': 'New York',
+        'request_limits': 1000
+    },
+    '192.174.1.24': {
+        'fingerprint': 'def456',
+        'location': 'Los Angeles',
+        'request_limits': 500
+    },
+    '192.131.1.31': {
+        'fingerprint': 'ghi789',
+        'location': 'Chicago',
+        'request_limits': 750
+    }
+}
+
 # Dicionário para armazenar a última requisição de cada IP, o fingerprint do IP e o limite
 # limite = numero de vezes em que o IP pode fazer requisições em um curto perido de horário
 # antes de ser bloquiado
@@ -72,28 +92,41 @@ class Request_Log:
         return (Logs)
 
 
+# ------------------------------ verifica se e uma VPN ou uma proxy --------------------------------
+# usando a API do IPQualityScore
+
+# def is_anonymous_ip(ip_address):
+#     api_key = "YOUR_API_KEY"  # Substitua pela sua chave de API do IPQualityScore
+#     url = f"https://ipqualityscore.com/api/json/ip/{api_key}/{ip_address}"
+
+#     response = requests.get(url)
+#     data = response.json()
+
+#     if data['proxy'] or data['vpn']:
+#         return True
+#     return False
+
+
+
 # ------------------------------ Geolocalização --------------------------------
 
-def get_ip_location(ip):
-    ip_to_locate = ip
-    request_url = 'https://geolocation-db.com/jsonp/' + ip_to_locate
+# def get_ip_location(ip):
+#     ip_to_locate = ip
+#     request_url = 'https://geolocation-db.com/jsonp/' + ip_to_locate
 
-    try:
-        response = requests.get(request_url)
-    except e:
-        # Handle the error here, e.g. log the error or return a default value
-        print("Invalid JSON string")
-        return None
 
-    result = response.content.decode()
-    result = result.split("(")[1].strip(")")
-    result = json.loads(result)
+#     response = requests.get(request_url)
 
-    # apenas o country_name and city
-    country_name = result.get('country_name')
-    city = result.get('city')
-    return country_name, city
+#     result = response.content.decode()
+#     result = result.split("(")[1].strip(")")
+#     result = json.loads(result)
 
+#     # pega o nome do pais
+#     country_name = result.get('country_name')
+#     return country_name
+
+# The_location = get_ip_location('198.6.3.18')
+# print(The_location)
 
 # ------------------------------ autenticação --------------------------------
 
@@ -125,14 +158,14 @@ def block_user_for():
     # ------------------ informaçoes da requisição ------------------
 
     # pega o IP o user_agent o tempo do request etc...
-    ip_address = "165.141.121.43"
+    ip_address = request.remote_addr
     user_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     PATH = request.path
     user_agent = request.headers.get('User-Agent')
 
-    # ------------------ informaçoes de localidade ------------------
-    country, city = get_ip_location(ip_address)
-    print(f"Country: {country}, City: {city}")
+    # # ------------------ informaçoes de localidade ------------------
+    # country = get_ip_location(ip_address)
+    # print(f"Country: {country}, City: {city}")
     
     # uma descriçao para o log ou outras informaçoes uteis
     coment = "None"
@@ -165,31 +198,51 @@ def block_user_for():
     # Obtém o hash hexadecimal
     New_fingerprint = hash_object.hexdigest()
 
+    # ------------------ block Anonymous IP ------------------
+    # if is_anonymous_ip(ip_address):
+    #     coment = "Bloqueado por usar IP anônimo"
+    #     log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
+    #     log.create_log()
+    #     return (True, coment)
+
 
     # ------------------ block Location ------------------    
     # bloquei o acesso de acordo com as informações de localidade
     
-    if country in contry_black_list:
-        coment = "Acesso nao autorestrito ao pais em que voce esta localizado"
-        # cria e adicina o log
-        log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
-        log.create_log()
-        return (True,coment)
+    # if location[ip_address] in contry_black_list:
+    #     coment = "Acesso não autorizado ao pais em que voce esta localizado"
+    #     # cria e adicina o log
+    #     log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
+    #     log.create_log()
+    #     return (True,coment)
 
     # ------------------ block requests com muitas requisições em um curto período de tempo e verifica o fingerprint ------------------
 
     # Obtendo o tempo atual como objeto datetime
     # nao funciona pegando o user_time 
     tempo_atual = datetime.now()
-    
-    if ip_address not in last_request_time:
-        last_request_time[ip_address] = tempo_atual.strftime('%Y-%m-%d %H:%M:%S')
-        request_limits[ip_address] = 0
-        fingerprint_list[ip_address] = New_fingerprint
+
+    # ----------------- adiciona o IP no dicionário de IPs -----------------
+    if ip_address not in ip_data:
+
+        # Adicionando um novo IP no dicionário
+        ip_data[ip_address] = {
+            "suspicion_Level": 0,
+            # 'location': get_ip_location(ip_address),
+            "fingerprint": New_fingerprint,
+            "request_count": 0,
+            "request_time_limit_count": 0,
+            "last_request_time": tempo_atual.strftime('%Y-%m-%d %H:%M:%S'),
+            "time_to_delete": 24,
+            "slow_down": "off"
+            ""
+        }
+        print(f"last_request_time: {ip_data[ip_address]}")
+
     else:
         # se o fingerprint da ultima requisição for diferente do 
         # fingerprint que o usuario esta usando agora Blockeia o acesso e adiciona na yellow_list
-        if fingerprint_list[ip_address] != New_fingerprint:
+        if ip_data[ip_address]["fingerprint"] != New_fingerprint:
             coment = "Por favor so acesse o site com o dispositivo que voce acessou na primeira vez"
             yellow_list_IP.append(ip_address)
             # cria e adicina o log
@@ -199,7 +252,7 @@ def block_user_for():
             return (True,coment)
 
         # Convertendo last_request_time[ip_address] para objeto datetime
-        last_request_time_ip = datetime.strptime(last_request_time[ip_address], '%Y-%m-%d %H:%M:%S')
+        last_request_time_ip = datetime.strptime(ip_data[ip_address]["last_request_time"], '%Y-%m-%d %H:%M:%S')
         
         # Calculando a diferença de tempo em segundos
         time_difference = (tempo_atual - last_request_time_ip).total_seconds()
@@ -208,23 +261,35 @@ def block_user_for():
         last_request_time[ip_address] = tempo_atual.strftime('%Y-%m-%d %H:%M:%S')
 
 
-    #Nota: no futuro modificar para o contador tambem usar o fingerprint nao so o IP bloquiar o acesso
-        # Se a diferença de tempo for menor que 10 segundos
-        if time_difference < 10:
-            request_limits[ip_address] += 1
+        if ip_data[ip_address]["slow_down"] == "on":
 
-            # limite de vezes em que a requisiçao pode passar dos segundos minimos entre requisiçoes
-            if request_limits[ip_address] > 5:
+            if time_difference < 60:
+                coment = "multiplos requests em um curto periodo de tempoe espere mais"
+                Alert = "multiplos acessos em um curto periodo de tempo espere 1 minuto"
+                return (True,coment,Alert)
+
+        # Se a diferença de tempo for menor que 10 segundos            
+        #Nota: no futuro modificar para o contador tambem usar o fingerprint nao so o IP para bloquiar o acesso
+        if time_difference < 10:
+            
+            ip_data[ip_address]["request_time_limit_count"] += 1
+
+            # limite de vezes em que se pode passar dos segundos minimos entre requisiçoes
+            if ip_data[ip_address]["request_time_limit_count"] > 5:
                 coment = "bloqueado por enviar multiplos requests em um curto periodo de tempo"
                 yellow_list_IP.append(ip_address)
                 # cria e adicina o log
                 log = Request_Log(tempo_atual, ip_address, PATH, user_agent, New_fingerprint, coment)
                 log.create_log()
+                ip_data[ip_address]["slow_down"] = "on"
+
                 # O true indica que o acesso nao passou na verificaçao de segurança
                 return (True,coment)
         else:
-            # Resetar o limite se a diferença de tempo for maior ou igual a 10 segundos
-            request_limits[ip_address] = 0
+            # volta o contador para 0 so vai ser bloquiado se for varias vezes seguidas
+            ip_data[ip_address]["request_time_limit_count"] = 0
+            # atualiza o ultimo tempo de requisição
+        ip_data[ip_address]["last_request_time"] = tempo_atual.strftime('%Y-%m-%d %H:%M:%S')
 
     # ------------------ request limits Now => is 10 ------------------    
 
@@ -236,7 +301,7 @@ def block_user_for():
         ip = log['user_ip']
         ip_count[ip] += 1
 
-    if ip_count[ip_address] > 10: # limite de requisiçoes por IP atualment => 10
+    if ip_count[ip_address] > 50: # limite de requisiçoes por IP atualment => 10
         coment = "Chegou a quantidade maxima de requisições por IP"
         yellow_list_IP.append(ip_address)
         # cria e adicina o log
@@ -288,9 +353,6 @@ def block_user_for():
     log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
     log.create_log()
     # O false indica que o acesso passou na verificaçao de segurança
-    # Test the function with an example IP address
-    
-    # get_ip_location("198.35.26.96")
 
     return (False,coment)
 
