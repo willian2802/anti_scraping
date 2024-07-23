@@ -234,7 +234,7 @@ def block_user_for():
             "request_time_limit_count": 0,
             "last_request_time": tempo_atual.strftime('%Y-%m-%d %H:%M:%S'),
             "time_to_delete": 24,
-            "slow_down": "off"
+            "slow_down": "on"
             ""
         }
         print(f"last_request_time: {ip_data[ip_address]}")
@@ -257,39 +257,39 @@ def block_user_for():
         # Calculando a diferença de tempo em segundos
         time_difference = (tempo_atual - last_request_time_ip).total_seconds()
         
-        # Atualizando last_request_time[ip_address] para o tempo atual
-        last_request_time[ip_address] = tempo_atual.strftime('%Y-%m-%d %H:%M:%S')
+        # # Atualizando last_request_time[ip_address] para o tempo atual
+        # last_request_time[ip_address] = tempo_atual.strftime('%Y-%m-%d %H:%M:%S')
 
 
-        if ip_data[ip_address]["slow_down"] == "on":
-
-            if time_difference < 60:
-                coment = "multiplos requests em um curto periodo de tempoe espere mais"
-                Alert = "multiplos acessos em um curto periodo de tempo espere 1 minuto"
-                return (True,coment,Alert)
-
-        # Se a diferença de tempo for menor que 10 segundos            
-        #Nota: no futuro modificar para o contador tambem usar o fingerprint nao so o IP para bloquiar o acesso
-        if time_difference < 10:
-            
-            ip_data[ip_address]["request_time_limit_count"] += 1
-
-            # limite de vezes em que se pode passar dos segundos minimos entre requisiçoes
-            if ip_data[ip_address]["request_time_limit_count"] > 5:
-                coment = "bloqueado por enviar multiplos requests em um curto periodo de tempo"
-                yellow_list_IP.append(ip_address)
-                # cria e adicina o log
-                log = Request_Log(tempo_atual, ip_address, PATH, user_agent, New_fingerprint, coment)
-                log.create_log()
-                ip_data[ip_address]["slow_down"] = "on"
-
-                # O true indica que o acesso nao passou na verificaçao de segurança
-                return (True,coment)
+        if ip_data[ip_address]["slow_down"] == "on" and time_difference < 60:
+            print(time_difference)
+            print(ip_data[ip_address]["slow_down"])
+            coment = "multiplos acessos em um curto periodo de tempo espere 1 minuto"
+            return (True,coment)
         else:
-            # volta o contador para 0 so vai ser bloquiado se for varias vezes seguidas
-            ip_data[ip_address]["request_time_limit_count"] = 0
-            # atualiza o ultimo tempo de requisição
-        ip_data[ip_address]["last_request_time"] = tempo_atual.strftime('%Y-%m-%d %H:%M:%S')
+
+            # Se a diferença de tempo for menor que 10 segundos            
+            #Nota: no futuro modificar para o contador tambem usar o fingerprint nao so o IP para bloquiar o acesso
+            if time_difference < 10:
+                
+                ip_data[ip_address]["request_time_limit_count"] += 1
+
+                # limite de vezes em que se pode passar dos segundos minimos entre requisiçoes
+                if ip_data[ip_address]["request_time_limit_count"] > 5:
+                    coment = "bloqueado por enviar multiplos requests em um curto periodo de tempo"
+                    yellow_list_IP.append(ip_address)
+                    # cria e adicina o log
+                    log = Request_Log(tempo_atual, ip_address, PATH, user_agent, New_fingerprint, coment)
+                    log.create_log()
+                    ip_data[ip_address]["slow_down"] = "on"
+
+                    # O true indica que o acesso nao passou na verificaçao de segurança
+                    return (True,coment)
+            else:
+                # volta o contador para 0 so vai ser bloquiado se for varias vezes seguidas
+                ip_data[ip_address]["request_time_limit_count"] = 0
+                # atualiza o ultimo tempo de requisição
+            ip_data[ip_address]["last_request_time"] = tempo_atual.strftime('%Y-%m-%d %H:%M:%S')
 
     # ------------------ request limits Now => is 10 ------------------    
 
