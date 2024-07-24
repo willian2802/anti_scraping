@@ -50,6 +50,26 @@ def get_logs():
     return jsonify(Logs)
 
 
+# -------------------------------- move tracker --------------------------------
+@app.route('/track_interaction', methods=['POST'])
+def track_interaction():
+    interaction_data = request.json
+
+    # armazena os dados de interação para um usuário em particular
+
+
+    # teste de lógica para analisar os dados e determinar se é um bot
+    # Exemplo de verificação simples:
+    if interaction_data['event'] == 'mousemove':
+        if interaction_data['x'] < 0 or interaction_data['y'] < 0:
+            print('Interação suspeita detectada!')
+            # Tome alguma ação, como bloquear o usuário ou solicitar uma verificação adicional
+
+    return jsonify(status="success"), 200
+
+
+
+
 # -------------------------------- honneypot --------------------------------
 @app.route('/endereco-de-processamento', methods=['POST'])
 def trap_activated():

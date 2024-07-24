@@ -234,12 +234,18 @@ def block_user_for():
             "request_time_limit_count": 0,
             "last_request_time": tempo_atual.strftime('%Y-%m-%d %H:%M:%S'),
             "time_to_delete": 24,
-            "slow_down": "on"
-            ""
+            "slow_down": "on",
+            "slow_down_count": 0
         }
+        # mude o tempo de acesso do IP para 12:00 do dia
+        # assim evitando erro com o "slow_down" mode
+        ip_data[ip_address]["last_request_time"] = tempo_atual.replace(hour=12, minute=0, second=0, microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
         print(f"last_request_time: {ip_data[ip_address]}")
 
     else:
+
+        # ------------ block by finger print ------------
+
         # se o fingerprint da ultima requisição for diferente do 
         # fingerprint que o usuario esta usando agora Blockeia o acesso e adiciona na yellow_list
         if ip_data[ip_address]["fingerprint"] != New_fingerprint:
@@ -251,7 +257,7 @@ def block_user_for():
             # O true indica que o acesso nao passou na verificaçao de segurança
             return (True,coment)
 
-        # Convertendo last_request_time[ip_address] para objeto datetime
+        # Convertendo last_request_time_ip para objeto datetime
         last_request_time_ip = datetime.strptime(ip_data[ip_address]["last_request_time"], '%Y-%m-%d %H:%M:%S')
         
         # Calculando a diferença de tempo em segundos
@@ -259,14 +265,26 @@ def block_user_for():
         
         # # Atualizando last_request_time[ip_address] para o tempo atual
         # last_request_time[ip_address] = tempo_atual.strftime('%Y-%m-%d %H:%M:%S')
+        
+        # ------------------- modo slow_down -------------------
+        # limita a quantidade de requisições que pode ser feitas em um curto periodo de tempo
+        # mas o acesso e liberado depois do tempo_minimo
+        tempo_minimo = 60
 
+        if ip_data[ip_address]["slow_down"] == "on":
+            if time_difference < tempo_minimo:
 
-        if ip_data[ip_address]["slow_down"] == "on" and time_difference < 60:
-            print(time_difference)
-            print(ip_data[ip_address]["slow_down"])
-            coment = "multiplos acessos em um curto periodo de tempo espere 1 minuto"
-            return (True,coment)
+                ip_data[ip_address]["slow_down_count"] += 1
+                # limite de requisiçoes por minuto
+                if ip_data[ip_address]["slow_down_count"] > 5:
+                    coment = "multiplos acessos em um curto periodo de tempo espere 1 minuto"
+                    return (True,coment)
+            else:
+                # Resetando o slow_down_count
+                ip_data[ip_address]["slow_down_count"] = 0
+
         else:
+            # ------------ block by request_time_limit ------------
 
             # Se a diferença de tempo for menor que 10 segundos            
             #Nota: no futuro modificar para o contador tambem usar o fingerprint nao so o IP para bloquiar o acesso
@@ -289,7 +307,7 @@ def block_user_for():
                 # volta o contador para 0 so vai ser bloquiado se for varias vezes seguidas
                 ip_data[ip_address]["request_time_limit_count"] = 0
                 # atualiza o ultimo tempo de requisição
-            ip_data[ip_address]["last_request_time"] = tempo_atual.strftime('%Y-%m-%d %H:%M:%S')
+        ip_data[ip_address]["last_request_time"] = tempo_atual.strftime('%Y-%m-%d %H:%M:%S')
 
     # ------------------ request limits Now => is 10 ------------------    
 
