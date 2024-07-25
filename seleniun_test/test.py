@@ -3,10 +3,13 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
+
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-import time
+import time, random
+
 
 #https://sites.google.com/chromium.org/driver/
 
@@ -145,6 +148,45 @@ def test_agensts_detection():
     except Exception as e:
         print(f"An error occurred: {e}")
 
+def test_mouse_movement():
+    
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless")  # Execute o Chrome em modo headless (sem janela gráfica)
+
+    # Inicializar ActionChains
+    actions = ActionChains(driver)
+
+    # Função para simular movimentos do mouse
+    def simulate_mouse_movements():
+        body = driver.find_element_by_tag_name('body')
+        for _ in range(100):
+            x_offset = random.randint(-100, 100)
+            y_offset = random.randint(-100, 100)
+            actions.move_by_offset(x_offset, y_offset).perform()
+            time.sleep(0.05)
+            actions.move_to_element(body).perform()
+
+    # Função para simular cliques
+    def simulate_clicks():
+        for _ in range(10):
+            x_offset = random.randint(0, driver.execute_script("return window.innerWidth"))
+            y_offset = random.randint(0, driver.execute_script("return window.innerHeight"))
+            actions.move_by_offset(x_offset, y_offset).click().perform()
+            time.sleep(0.2)
+
+    # Função para simular rolagem
+    def simulate_scroll():
+        for _ in range(5):
+            driver.execute_script("window.scrollBy(0, 100);")
+            time.sleep(0.2)
+            driver.execute_script("window.scrollBy(0, -100);")
+            time.sleep(0.2)
+
+    # Executar simulações
+    simulate_mouse_movements()
+    simulate_clicks()
+    simulate_scroll()
+
 # # Lista de proxies organizados por país
 # proxies = {
 #     "France": "fr.proxy.example:8080",
@@ -187,8 +229,10 @@ def test_agensts_detection():
 # Executar o teste
 # test_honeypot()
 # test_multiple_request()
-test_agensts_detection()
+# test_agensts_detection()
 # test_acesso_por_pais('BR', 'http://www.example.com')
+test_mouse_movement()
+
 
 
 

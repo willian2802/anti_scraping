@@ -234,10 +234,10 @@ def block_user_for():
             "request_time_limit_count": 0,
             "last_request_time": tempo_atual.strftime('%Y-%m-%d %H:%M:%S'),
             "time_to_delete": 24,
-            "slow_down": "on",
+            "slow_down": "off",
             "slow_down_count": 0
         }
-        # mude o tempo de acesso do IP para 12:00 do dia
+        # qundo o IP entra no dicionário o tempo de acesso do IP e 12:00
         # assim evitando erro com o "slow_down" mode
         ip_data[ip_address]["last_request_time"] = tempo_atual.replace(hour=12, minute=0, second=0, microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
         print(f"last_request_time: {ip_data[ip_address]}")
@@ -275,9 +275,9 @@ def block_user_for():
             if time_difference < tempo_minimo:
 
                 ip_data[ip_address]["slow_down_count"] += 1
-                # limite de requisiçoes por minuto
+                # limite de requisiçoes por tempo_minimo
                 if ip_data[ip_address]["slow_down_count"] > 5:
-                    coment = "multiplos acessos em um curto periodo de tempo espere 1 minuto"
+                    coment = "multiplos acessos em um curto periodo de tempo, espere 1 minuto para liberar o acesso" 
                     return (True,coment)
             else:
                 # Resetando o slow_down_count

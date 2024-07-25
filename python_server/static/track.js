@@ -1,5 +1,7 @@
 // ------------------------ track mouse events --------------------------
 
+let mouseMovements = [];
+
 // Função para enviar dados de interação para o servidor
 function sendInteractionData(data) {
     fetch('/track_interaction', {
@@ -24,13 +26,21 @@ document.addEventListener('click', function(event) {
 
 // Capturando movimentos do mouse
 document.addEventListener('mousemove', function(event) {
-    const data = {
-        event: 'mousemove',
+    const movement = {
         x: event.clientX,
         y: event.clientY,
         timestamp: Date.now()
     };
-    sendInteractionData(data);
+    mouseMovements.push(movement);
+
+    // Enviar dados do mouse a cada 100 movimentos
+    if (mouseMovements.length >= 100) {
+        sendInteractionData({
+            event: 'mousemove',
+            movements: mouseMovements
+        });
+        mouseMovements = [];
+    }
 });
 
 // Capturando eventos de rolagem

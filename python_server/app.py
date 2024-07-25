@@ -50,20 +50,56 @@ def get_logs():
     return jsonify(Logs)
 
 
-# -------------------------------- move tracker --------------------------------
+# -------------------------------- movement and mouse events tracker --------------------------------
+
+def is_smooth_and_constant(movements):
+    # Verifica se os movimentos são muito suaves e constantes
+    threshold = 2  # Pixels de diferença mínima para considerar como movimento humano
+    smooth_movements = sum(
+        1 for i in range(1, len(movements))
+        if abs(movements[i]['x'] - movements[i-1]['x']) < threshold and
+           abs(movements[i]['y'] - movements[i-1]['y']) < threshold
+    )
+    return smooth_movements > len(movements) * 0.9  # Se mais de 90% dos movimentos forem suaves
+
+def is_frequency_high(movements):
+    # Verifica se a frequência dos eventos de movimento é muito alta
+    timestamps = [m['timestamp'] for m in movements]
+    intervals = [timestamps[i] - timestamps[i-1] for i in range(1, len(timestamps))]
+    average_interval = sum(intervals) / len(intervals)
+    return average_interval < 10  # Se o intervalo médio for menor que 10ms
+
+def has_human_variation(movements):
+    # Verifica se há variação humana nos movimentos
+    directions = [
+        (movements[i]['x'] - movements[i-1]['x'], movements[i]['y'] - movements[i-1]['y'])
+        for i in range(1, len(movements))
+    ]
+    direction_changes = sum(
+        1 for i in range(1, len(directions))
+        if directions[i] != directions[i-1]
+    )
+    return direction_changes > len(directions) * 0.5  # Se mais de 50% das direções mudarem
+
+
+
 @app.route('/track_interaction', methods=['POST'])
 def track_interaction():
     interaction_data = request.json
+    print('Dados de interação recebidos:', interaction_data)
 
-    # armazena os dados de interação para um usuário em particular
-
-
-    # teste de lógica para analisar os dados e determinar se é um bot
-    # Exemplo de verificação simples:
     if interaction_data['event'] == 'mousemove':
-        if interaction_data['x'] < 0 or interaction_data['y'] < 0:
-            print('Interação suspeita detectada!')
-            # Tome alguma ação, como bloquear o usuário ou solicitar uma verificação adicional
+        movements = interaction_data['movements']
+        if is_smooth_and_constant(movements):
+            print('Interação suspeita detectada: Movimentos muito suaves e constantes')
+        elif is_frequency_high(movements):
+            print('Interação suspeita detectada: Frequência de eventos muito alta')
+        elif not has_human_variation(movements):
+            print('Interação suspeita detectada: Falta de variação humana nos movimentos')
+        else:
+            print('Interação parece ser humana')
+        
+        
 
     return jsonify(status="success"), 200
 
