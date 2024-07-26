@@ -104,13 +104,13 @@ def test_multiple_request():
 user_agents = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
     "Mozilla/5.0 bot (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8",
-    "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0",
-    "Mozilla/5.0 scra (iPad; CPU OS 11_0 like Mac OS X) AppleWebKit/604.1.34 (KHTML, like Gecko) Version/11.0 Mobile/15A5341f Safari/604.1",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    "Mozilla/5.0  (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0",
+    "Mozilla/5.0 scraping (iPad; CPU OS 11_0 like Mac OS X) AppleWebKit/604.1.34 (KHTML, like Gecko) Version/11.0 Mobile/15A5341f Safari/604.1",
+    "Mozilla/5.0 bot (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
 ]
 
 def test_agensts_detection():
-
+    # teste para a detecção de agente e fingerprint
     try:
 
         # Loop through the list of user agents
@@ -158,7 +158,7 @@ def test_mouse_movement():
 
     # Função para simular movimentos do mouse
     def simulate_mouse_movements():
-        body = driver.find_element_by_tag_name('body')
+        body = driver.find_element('body')
         for _ in range(100):
             x_offset = random.randint(-100, 100)
             y_offset = random.randint(-100, 100)
@@ -181,11 +181,44 @@ def test_mouse_movement():
             time.sleep(0.2)
             driver.execute_script("window.scrollBy(0, -100);")
             time.sleep(0.2)
-
+    
     # Executar simulações
     simulate_mouse_movements()
     simulate_clicks()
     simulate_scroll()
+
+def simulate_interaction(window_size, user_agent, url):
+    driver = create_driver(window_size, user_agent)
+    driver.get(url)
+    
+    simulate_mouse_movements(driver)
+    simulate_clicks(driver)
+    simulate_scroll(driver)
+
+
+# Configurações para diferentes máquinas
+machines = [
+    {"window_size": "1920,1080", "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"},
+    {"window_size": "1366,768", "user_agent": "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko"},
+    {"window_size": "1440,900", "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"},
+    {"window_size": "2560,1440", "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"},
+    {"window_size": "375,812", "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"}
+]
+
+# URL do seu arquivo HTML
+url = "file:///caminho/para/seu/arquivo.html"  # Atualize o caminho para o seu arquivo HTML
+
+# Simular interação para cada máquina
+for machine in machines:
+    simulate_interaction(machine["window_size"], machine["user_agent"], url)
+
+# ------------------------------ Executar o teste --------------------------------
+# test_honeypot()
+# test_multiple_request()
+# test_agensts_detection()
+
+# test_acesso_por_pais('BR', 'https://willian.pythonanywhere.com/views/cofe_shop')
+#test_mouse_movement()
 
 # # Lista de proxies organizados por país
 # proxies = {
@@ -224,17 +257,6 @@ def test_mouse_movement():
 #     url = "http://www.example.com"
 #     for country in proxies.keys():
 #         test_acesso_por_pais(country, url)
-
-
-# Executar o teste
-# test_honeypot()
-# test_multiple_request()
-# test_agensts_detection()
-# test_acesso_por_pais('BR', 'http://www.example.com')
-test_mouse_movement()
-
-
-
 
 
 # # acessa o google
