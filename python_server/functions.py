@@ -4,6 +4,7 @@ from flask import request, session, redirect, url_for
 from datetime import datetime
 from functools import wraps
 
+
 # geolication
 import requests
 import json
