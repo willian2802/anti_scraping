@@ -4,6 +4,9 @@ from flask import request, session, redirect, url_for
 from datetime import datetime
 from functools import wraps
 
+# MongoDB
+from MongoDB import add_log_to_DB
+
 
 # geolication
 import requests
@@ -75,7 +78,7 @@ class Request_Log:
 
     def create_log(self):
 
-        # generate a log
+        # cria e adiciona o log no DB
         log = {
         'current_time': self.current_time,
         'user_ip': self.ip_address,
@@ -84,7 +87,7 @@ class Request_Log:
         'fingerprint': self.fingerprint,
         'coment': self.coment
         }
-        Logs.append(log)
+        add_log_to_DB(log)
 
     def show_log(self):
         return f"Current Time: {self.current_time}, IP: {self.ip_address}, Path: {self.path}, Agent: {self.agent}, Hash Code: {self.fingerprint}, Coment: {self.coment}"
@@ -368,12 +371,13 @@ def block_user_for():
     # se o acesso passou por todas as verificacoes, o acesso pode ser autorizado
     coment = "Acesso autorizado"
 
-    # cria e adicina o log
+    # cria e adicina o log no MongoDB
     log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
     log.create_log()
     # O false indica que o acesso passou na verificaçao de segurança
 
     return (False,coment)
+
 
     
 # -------------------------------- update_access_log and list_IPs--------------------------------
