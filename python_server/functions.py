@@ -5,7 +5,9 @@ from datetime import datetime
 from functools import wraps
 
 # MongoDB
-from MongoDB import add_log_to_DB
+from MongoDB import add_log_to_DB, add_IP_data_to_DB, get_ip_data_from_db
+from bson.objectid import ObjectId
+
 
 
 # geolication
@@ -28,23 +30,7 @@ contry_black_list = ["China","India","Brazil","Russia"]
 
 
 # dicionário para armazenar os IPs e seus atributos
-ip_data = {
-    '192.128.5.21': {
-        'fingerprint': 'abc123',
-        'location': 'New York',
-        'request_limits': 1000
-    },
-    '192.174.1.24': {
-        'fingerprint': 'def456',
-        'location': 'Los Angeles',
-        'request_limits': 500
-    },
-    '192.131.1.31': {
-        'fingerprint': 'ghi789',
-        'location': 'Chicago',
-        'request_limits': 750
-    }
-}
+DB_IP_Data = {}
 
 # Dicionário para armazenar a última requisição de cada IP, o fingerprint do IP e o limite
 # limite = numero de vezes em que o IP pode fazer requisições em um curto perido de horário
@@ -94,7 +80,6 @@ class Request_Log:
     
     def show_all(self):
         return (Logs)
-
 
 # ------------------------------ verifica se e uma VPN ou uma proxy --------------------------------
 # usando a API do IPQualityScore
@@ -226,11 +211,14 @@ def block_user_for():
     # nao funciona pegando o user_time 
     tempo_atual = datetime.now()
 
-    # ----------------- adiciona o IP no dicionário de IPs -----------------
+    # ----------------- adiciona o IP no dicionário de IPs no mongoDB -----------------
+    ip_data = get_ip_data_from_db(ip_address)
+
     if ip_address not in ip_data:
 
+        new_ip_data = {}
         # Adicionando um novo IP no dicionário
-        ip_data[ip_address] = {
+        new_ip_data[ip_address] = {
             "suspicion_Level": 0,
             # 'location': get_ip_location(ip_address),
             "fingerprint": New_fingerprint,
@@ -241,10 +229,15 @@ def block_user_for():
             "slow_down": "off",
             "slow_down_count": 0
         }
+        
+
+
         # qundo o IP entra no dicionário o tempo de acesso do IP e 12:00
         # assim evitando erro com o "slow_down" mode
+        add_IP_data_to_DB(new_ip_data)
+
         ip_data[ip_address]["last_request_time"] = tempo_atual.replace(hour=12, minute=0, second=0, microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
-        print(f"last_request_time: {ip_data[ip_address]}")
+
 
     else:
 
