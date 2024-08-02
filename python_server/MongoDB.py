@@ -72,4 +72,4 @@ def get_ip_data_from_db(ip_address):
         return data[ip_address]
     return None
 
-
+get_ip_data_from_db("127.0.0.1")

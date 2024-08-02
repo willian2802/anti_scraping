@@ -212,7 +212,7 @@ def block_user_for():
     tempo_atual = datetime.now()
 
     # ----------------- adiciona o IP no dicionário de IPs no mongoDB -----------------
-    ip_data = get_ip_data_from_db(ip_address)
+    # ip_data = get_ip_data_from_db(ip_address)
 
     if ip_address not in ip_data:
 

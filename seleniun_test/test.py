@@ -273,4 +273,21 @@ for machine in machines:
 
 # driver.quit()
 
+# Função para simular digitação de texto
+def simulate_typing(element, text):
+    for char in text:
+        element.send_keys(char)
+        time.sleep(random.uniform(0.1, 0.3))
 
+def test_typing_interaction():
+    driver.get("https://willian.pythonanywhere.com/views")
+    wait = WebDriverWait(driver, 10)
+    nome_input = wait.until(EC.presence_of_element_located((By.NAME, 'nome')))
+    simulate_typing(nome_input, 'willian souza')
+    enviar_input = driver.find_element(By.NAME, 'enviar')
+    enviar_input.click()
+    time.sleep(50)
+    page_content = driver.page_source
+    if 'conteudo_especifico' in page_content:
+        print("Página acessada com sucesso, medidas anti-scraping não detectadas.")
+    else:
