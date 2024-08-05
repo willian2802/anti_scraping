@@ -212,13 +212,16 @@ def block_user_for():
     tempo_atual = datetime.now()
 
     # ----------------- adiciona o IP no dicionário de IPs no mongoDB -----------------
-    # ip_data = get_ip_data_from_db(ip_address)
+
+
+    # Note: achar um jeito de pegar o ip e outros atributos do ip_data 
+    ip_data = get_ip_data_from_db(ip_address)
 
     if ip_address not in ip_data:
 
-        new_ip_data = {}
         # Adicionando um novo IP no dicionário
-        new_ip_data[ip_address] = {
+        new_ip_data = {
+            "IP": ip_address,
             "suspicion_Level": 0,
             # 'location': get_ip_location(ip_address),
             "fingerprint": New_fingerprint,
@@ -229,18 +232,19 @@ def block_user_for():
             "slow_down": "off",
             "slow_down_count": 0
         }
-        
+        # quando o IP entra no dicionário o tempo de acesso do IP e 12:00
 
-
-        # qundo o IP entra no dicionário o tempo de acesso do IP e 12:00
         # assim evitando erro com o "slow_down" mode
-        add_IP_data_to_DB(new_ip_data)
+        add_IP_data_to_DB(ip_address, new_ip_data)
 
+        # pega o IP_data no mongoDB usando o IP
+        ip_data = get_ip_data_from_db(ip_address)
         ip_data[ip_address]["last_request_time"] = tempo_atual.replace(hour=12, minute=0, second=0, microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
 
 
     else:
-
+        # pega o IP_data no mongoDB usando o IP
+        ip_data = get_ip_data_from_db(ip_address)
         # ------------ block by finger print ------------
 
         # se o fingerprint da ultima requisição for diferente do 

@@ -8,6 +8,7 @@ from functions import Logs
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Necessário para usar sessões
+# app.config["MONGO_URI"] = "mongodb://localhost:27017/sample_mflix"
 
 
 # para acessar essa pagina e "/views" se quizer depois acessar outra pagina /views/home etc...
