@@ -86,6 +86,5 @@ def get_ip_data_from_db(ip_address):
     # If found, return the data of the specific IP
     if data:
         return data
-    return None
+    return False
 
-get_ip_data_from_db("127.0.0.1")

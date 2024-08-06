@@ -214,10 +214,10 @@ def block_user_for():
     # ----------------- adiciona o IP no dicionário de IPs no mongoDB -----------------
 
 
-    # Note: achar um jeito de pegar o ip e outros atributos do ip_data 
+    # Buscar no DB o IP se tiver retorna o objeto se nao retorna False
     ip_data = get_ip_data_from_db(ip_address)
-
-    if ip_address not in ip_data:
+    # se o IP nao estiver no DB cria um novo ip_data para o novo IP
+    if ip_data is False:
 
         # Adicionando um novo IP no dicionário
         new_ip_data = {
@@ -233,8 +233,9 @@ def block_user_for():
             "slow_down_count": 0
         }
         # quando o IP entra no dicionário o tempo de acesso do IP e 12:00
-
         # assim evitando erro com o "slow_down" mode
+
+        # adiciona o IP_data no mongoDB, o ip_address vai ser o "_id" do objeto no DB
         add_IP_data_to_DB(ip_address, new_ip_data)
 
         # pega o IP_data no mongoDB usando o IP
@@ -245,21 +246,20 @@ def block_user_for():
     else:
         # pega o IP_data no mongoDB usando o IP
         ip_data = get_ip_data_from_db(ip_address)
+
         # ------------ block by finger print ------------
 
         # se o fingerprint da ultima requisição for diferente do 
         # fingerprint que o usuario esta usando agora Blockeia o acesso e adiciona na yellow_list
-        if ip_data[ip_address]["fingerprint"] != New_fingerprint:
-            coment = "Por favor so acesse o site com o dispositivo que voce acessou na primeira vez"
-            yellow_list_IP.append(ip_address)
-            # cria e adicina o log
-            log = Request_Log(tempo_atual, ip_address, PATH, user_agent, New_fingerprint, coment)
-            log.create_log()
-            # O true indica que o acesso nao passou na verificaçao de segurança
-            return (True,coment)
+        if ip_data["fingerprint"] != New_fingerprint:
+
+            # aumenta no nivel de suspeita e adiciona um coment
+            ip_data["suspicion_Level"] += 2
+            coment = "Fingerptint: Alert, "
+            
 
         # Convertendo last_request_time_ip para objeto datetime
-        last_request_time_ip = datetime.strptime(ip_data[ip_address]["last_request_time"], '%Y-%m-%d %H:%M:%S')
+        last_request_time_ip = datetime.strptime(ip_data["last_request_time"], '%Y-%m-%d %H:%M:%S')
         
         # Calculando a diferença de tempo em segundos
         time_difference = (tempo_atual - last_request_time_ip).total_seconds()
@@ -272,18 +272,16 @@ def block_user_for():
         # mas o acesso e liberado depois do tempo_minimo
         tempo_minimo = 60
 
-        if ip_data[ip_address]["slow_down"] == "on":
+        if ip_data["slow_down"] == "on":
             if time_difference < tempo_minimo:
 
-                ip_data[ip_address]["slow_down_count"] += 1
+                ip_data["slow_down_count"] += 1
                 # limite de requisiçoes por tempo_minimo
-                if ip_data[ip_address]["slow_down_count"] > 5:
-                    coment = "multiplos acessos em um curto periodo de tempo, espere 1 minuto para liberar o acesso" 
-                    return (True,coment)
+                if ip_data["slow_down_count"] > 5:
+                    coment = "chegou ao limite de requisições por minuto" 
             else:
                 # Resetando o slow_down_count
-                ip_data[ip_address]["slow_down_count"] = 0
-
+                ip_data["slow_down_count"] = 0
         else:
             # ------------ block by request_time_limit ------------
 
@@ -291,24 +289,27 @@ def block_user_for():
             #Nota: no futuro modificar para o contador tambem usar o fingerprint nao so o IP para bloquiar o acesso
             if time_difference < 10:
                 
-                ip_data[ip_address]["request_time_limit_count"] += 1
+                ip_data["request_time_limit_count"] += 1
 
                 # limite de vezes em que se pode passar dos segundos minimos entre requisiçoes
-                if ip_data[ip_address]["request_time_limit_count"] > 5:
-                    coment = "bloqueado por enviar multiplos requests em um curto periodo de tempo"
-                    yellow_list_IP.append(ip_address)
+                if ip_data["request_time_limit_count"] > 5:
+                    coment = "multiplas requisições em um curto intervalo de tempo"
+                    
                     # cria e adicina o log
                     log = Request_Log(tempo_atual, ip_address, PATH, user_agent, New_fingerprint, coment)
                     log.create_log()
-                    ip_data[ip_address]["slow_down"] = "on"
+
+                    # aiva o modo slow_down que limita a quantidade de requisições por tempo_minimo
+                    # normalmente 1 minuto
+                    ip_data["slow_down"] = "on"
 
                     # O true indica que o acesso nao passou na verificaçao de segurança
                     return (True,coment)
             else:
                 # volta o contador para 0 so vai ser bloquiado se for varias vezes seguidas
-                ip_data[ip_address]["request_time_limit_count"] = 0
+                ip_data["request_time_limit_count"] = 0
                 # atualiza o ultimo tempo de requisição
-        ip_data[ip_address]["last_request_time"] = tempo_atual.strftime('%Y-%m-%d %H:%M:%S')
+        ip_data["last_request_time"] = tempo_atual.strftime('%Y-%m-%d %H:%M:%S')
 
     # ------------------ request limits Now => is 10 ------------------    
 
@@ -334,20 +335,13 @@ def block_user_for():
     # bloqueia os agents que tenhan o nome "bot" ou "scraper"
     user_agent = request.headers.get('User-Agent')
     if re.search(r'\bbot\b', user_agent, re.IGNORECASE) or re.search(r'\bscraper\b', user_agent, re.IGNORECASE):
-        coment = "bloquiado por usar bots ou por scraping"
-        # cria e adicina o log
-        log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
-        log.create_log()
-        return (True,coment)
+        coment = "agents_check: alert, "
+        ip_data["suspicion_Level"] += 6
     
     # se o agente for "headless" nao vai ter acesso ao site
     if re.search(r'\bheadless\b', user_agent, re.IGNORECASE):
-        coment = "bloquiado por usar agente headless"
-        # cria e adicina o log
-        log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
-        log.create_log()
-        # O true indica que o acesso nao passou na verificaçao de segurança
-        return (True,coment)
+        coment = "agents_headless: alert, "
+        ip_data["suspicion_Level"] += 6
     
 
     # ------------------ verifica se o IP esta em uma das listas ------------------    
