@@ -6,8 +6,6 @@ from functools import wraps
 
 # MongoDB
 from MongoDB import add_log_to_DB, add_IP_data_to_DB, get_ip_data_from_db
-from bson.objectid import ObjectId
-
 
 
 # geolication
@@ -99,23 +97,25 @@ class Request_Log:
 
 # ------------------------------ Geolocalização --------------------------------
 
-# def get_ip_location(ip):
-#     ip_to_locate = ip
-#     request_url = 'https://geolocation-db.com/jsonp/' + ip_to_locate
+ip = '127.0.0.1'
+
+def get_ip_location(ip):
+    ip_to_locate = ip
+    request_url = 'https://geolocation-db.com/jsonp/' + ip_to_locate
 
 
-#     response = requests.get(request_url)
+    response = requests.get(request_url)
 
-#     result = response.content.decode()
-#     result = result.split("(")[1].strip(")")
-#     result = json.loads(result)
+    result = response.content.decode()
+    result = result.split("(")[1].strip(")")
+    result = json.loads(result)
 
-#     # pega o nome do pais
-#     country_name = result.get('country_name')
-#     return country_name
+    # pega o nome do pais
+    country_name = result.get('country_name')
+    return country_name
 
-# The_location = get_ip_location('198.6.3.18')
-# print(The_location)
+The_location = get_ip_location('198.6.3.18')
+print(The_location)
 
 # ------------------------------ autenticação --------------------------------
 
@@ -142,7 +142,10 @@ def login_required(f):
 
 # --------------------------- block bots ---------------------------
 
-def block_user_for():
+
+# se retornar False significa que o acesso foi bloqueado
+# se retornar True significa que o acesso foi liberado
+def Securety_check():
 
     # ------------------ informaçoes da requisição ------------------
 
@@ -192,7 +195,7 @@ def block_user_for():
     #     coment = "Bloqueado por usar IP anônimo"
     #     log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
     #     log.create_log()
-    #     return (True, coment)
+    #     return (False, coment)
 
 
     # ------------------ block Location ------------------    
@@ -203,7 +206,7 @@ def block_user_for():
     #     # cria e adicina o log
     #     log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
     #     log.create_log()
-    #     return (True,coment)
+    #     return (False,coment)
 
     # ------------------ block requests com muitas requisições em um curto período de tempo e verifica o fingerprint ------------------
 
@@ -211,7 +214,7 @@ def block_user_for():
     # nao funciona pegando o user_time 
     tempo_atual = datetime.now()
 
-    # ----------------- adiciona o IP no dicionário de IPs no mongoDB -----------------
+    # ----------------- adiciona o IP_data no mongoDB -----------------
 
 
     # Buscar no DB o IP se tiver retorna o objeto se nao retorna False
@@ -240,7 +243,7 @@ def block_user_for():
 
         # pega o IP_data no mongoDB usando o IP
         ip_data = get_ip_data_from_db(ip_address)
-        ip_data[ip_address]["last_request_time"] = tempo_atual.replace(hour=12, minute=0, second=0, microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
+        ip_data["last_request_time"] = tempo_atual.replace(hour=12, minute=0, second=0, microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
 
 
     else:
@@ -253,9 +256,9 @@ def block_user_for():
         # fingerprint que o usuario esta usando agora Blockeia o acesso e adiciona na yellow_list
         if ip_data["fingerprint"] != New_fingerprint:
 
-            # aumenta no nivel de suspeita e adiciona um coment
-            ip_data["suspicion_Level"] += 2
-            coment = "Fingerptint: Alert, "
+            # aumenta o nivel de suspeita e adiciona um coment
+            ip_data["suspicion_Level"] += 3
+            coment += "Fingerptint: Alert, "
             
 
         # Convertendo last_request_time_ip para objeto datetime
@@ -278,7 +281,7 @@ def block_user_for():
                 ip_data["slow_down_count"] += 1
                 # limite de requisiçoes por tempo_minimo
                 if ip_data["slow_down_count"] > 5:
-                    coment = "chegou ao limite de requisições por minuto" 
+                    coment = "chegou ao limite de requisições por minuto"
             else:
                 # Resetando o slow_down_count
                 ip_data["slow_down_count"] = 0
@@ -293,58 +296,61 @@ def block_user_for():
 
                 # limite de vezes em que se pode passar dos segundos minimos entre requisiçoes
                 if ip_data["request_time_limit_count"] > 5:
-                    coment = "multiplas requisições em um curto intervalo de tempo"
+
+                    # aumenta no nivel de suspeita e adiciona um coment
+                    ip_data["suspicion_Level"] += 3
+                    coment = "Request time limit: Alert, "
                     
                     # cria e adicina o log
                     log = Request_Log(tempo_atual, ip_address, PATH, user_agent, New_fingerprint, coment)
                     log.create_log()
 
-                    # aiva o modo slow_down que limita a quantidade de requisições por tempo_minimo
+                    # ativa o modo slow_down que limita a quantidade de requisições por tempo_minimo
                     # normalmente 1 minuto
                     ip_data["slow_down"] = "on"
 
-                    # O true indica que o acesso nao passou na verificaçao de segurança
-                    return (True,coment)
+                    # O False indica que o acesso nao passou na verificaçao de segurança
+                    return (False,coment)
             else:
                 # volta o contador para 0 so vai ser bloquiado se for varias vezes seguidas
                 ip_data["request_time_limit_count"] = 0
                 # atualiza o ultimo tempo de requisição
         ip_data["last_request_time"] = tempo_atual.strftime('%Y-%m-%d %H:%M:%S')
 
-    # ------------------ request limits Now => is 10 ------------------    
+    # ------------------ request limits per IP ------------------    
+
+    # aumenta o contador de requisições
+    ip_data["request_count"] += 1
 
     # Se passar de um certo número de requests, bloqueia o acesso
-    # Dicionario para armazenar o numero de requisições por IP
-    ip_count = defaultdict(int)
-    for log in Logs:
-        
-        ip = log['user_ip']
-        ip_count[ip] += 1
-
-    if ip_count[ip_address] > 50: # limite de requisiçoes por IP atualment => 10
+    if ip_data["request_count"] > 5000: # limite de requisiçoes por IP atualment => 50
         coment = "Chegou a quantidade maxima de requisições por IP"
-        yellow_list_IP.append(ip_address)
+
         # cria e adicina o log
         log = Request_Log(tempo_atual, ip_address, PATH, user_agent, New_fingerprint, coment)
         log.create_log()
-        # O true indica que o acesso nao passou na verificaçao de segurança
-        return (True,coment)
+
+        add_IP_data_to_DB(ip_address, ip_data)
+
+        # O False indica que o acesso nao passou na verificaçao de segurança
+        return (False,coment)
         
 
-    # ------------------ Agent blocker ------------------    
+    # ------------------ Agent blocker ------------------
+
     # bloqueia os agents que tenhan o nome "bot" ou "scraper"
     user_agent = request.headers.get('User-Agent')
     if re.search(r'\bbot\b', user_agent, re.IGNORECASE) or re.search(r'\bscraper\b', user_agent, re.IGNORECASE):
-        coment = "agents_check: alert, "
-        ip_data["suspicion_Level"] += 6
+        coment += "agents_check: alert, "
+        ip_data["suspicion_Level"] += 10
     
     # se o agente for "headless" nao vai ter acesso ao site
     if re.search(r'\bheadless\b', user_agent, re.IGNORECASE):
-        coment = "agents_headless: alert, "
-        ip_data["suspicion_Level"] += 6
+        coment += "agents_headless: alert, "
+        ip_data["suspicion_Level"] += 10
     
 
-    # ------------------ verifica se o IP esta em uma das listas ------------------    
+    # ------------------ verifica se o IP esta em uma black list ou yellow list ------------------    
 
     # bloqueia os IPs que estiverem na black list ou na yellow list e adiciona um comentario
     if ip_address in black_list_IP or ip_address in yellow_list_IP:
@@ -354,71 +360,31 @@ def block_user_for():
         log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
         log.create_log()
         
-        # O true indica que o acesso nao passou na verificaçao de segurança
-        return (True,coment)
+        # O False indica que o acesso nao passou na verificaçao de segurança
+        return (False,coment)
 
-# ------------------ no final de tudo ------------------    
+# ------------------ no final de tudo ------------------ 
+
+    # se o nivel de suspeita passar de 5, ativa o slow_down
+    if ip_data["suspicion_Level"] > 5:
+        # ativa o modo slow_down que limita a quantidade de requisições por tempo_minimo
+        # normalmente o tempo_minimo = 1 minuto
+        # Nota: isso e apenas para um IP especifico
+        ip_data["slow_down"] = "on"
+    # atualizar o IP_Data no MongoDB
+    add_IP_data_to_DB(ip_address, ip_data)
      
+    if ip_data["suspicion_Level"] >= 10:
+        
+        # O False indica que o acesso nao passou na verificaçao de segurança
+        return (False,coment)
+
     # se o acesso passou por todas as verificacoes, o acesso pode ser autorizado
-    coment = "Acesso autorizado"
+    Final_coment = "Acesso autorizado"
 
     # cria e adicina o log no MongoDB
     log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
     log.create_log()
-    # O false indica que o acesso passou na verificaçao de segurança
+    # O True indica que o acesso passou na verificaçao de segurança
 
-    return (False,coment)
-
-
-    
-# -------------------------------- update_access_log and list_IPs--------------------------------
-# def add_IP_list():
-#     user_ip = request.remote_addr
-    
-
-
-#     user_info = {
-#             'user_ip': ip_address
-#         }
-
-#     # verifica se ja tem as informaçoes do usario
-#     # se nao adiciona as informaçoes no user_info
-#     if user_info not in User_information:
-#         User_information.append(user_info)
-    
-#     # generate a log
-#     log = {
-#         'user_ip': user_ip,
-#         'user_agent': user_agent,
-#     }
-#     Logs.append(log)
-    
-
-#     return f"user_ip: {user_ip}, user_agent: {user_agent}, logs list: {Logs}"
-
-
-
-# def list_IPs_updated():
-#     user_ip = request.remote_addr
-#     user_agent = request.headers.get('User-Agent')
-
-#     user_info = {
-#             'user_ip': "121.121.121.121",
-#             'user_agent': user_agent,
-#         }
-
-#     # verifica se ja tem as informaçoes do usario
-#     # se nao adiciona as informaçoes no user_info
-#     if user_info not in User_information:
-#         logs.append(user_info)
-    
-#     # generate a log
-#     log = {
-#         'user_ip': user_ip,
-#         'user_agent': user_agent,
-#     }
-#     logs.append(log)
-    
-
-#     return f"user_ip: {user_ip}, user_agent: {user_agent}, logs list: {logs}"
-
+    return (True,Final_coment)

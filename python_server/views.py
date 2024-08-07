@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request
-from functions import block_user_for,login_required
+from functions import Securety_check,login_required
 
 views = Blueprint(__name__, 'views')
 
@@ -12,11 +12,11 @@ views = Blueprint(__name__, 'views')
 def render_index():
 
     # roda as funçoes que verificao se e um bot ou nao se for entao bloqueia o acesso
-    block_user_for()
-    result, comment = block_user_for()
+    Securety_check()
+    result, comment = Securety_check()
 
-    # verifica se a function retorna true isso significa que o acesso foi bloqueado
-    if result == True:
+    # verifica se a function retorna False isso significa que o acesso foi bloqueado
+    if result == False:
 
         return f"{comment}"
 
@@ -35,11 +35,11 @@ def logs_console():
 # que verifica se o usuario foi autenticado se sim ele passa se nao ele volta pro index que e o captcha
 def cofe_page():
     # roda as funçoes que verificao se e um bot ou nao se for entao bloqueia o acesso
-    block_user_for()
-    result, comment = block_user_for()
+    Securety_check()
+    result, comment = Securety_check()
 
-    # verifica se a function retorna true isso significa que o acesso foi bloqueado
-    if result == True:
+    # verifica se a function retorna False isso significa que o acesso foi bloqueado
+    if result == False:
 
         return f"{comment}"
 

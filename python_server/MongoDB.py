@@ -3,7 +3,8 @@
 
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-from bson.objectid import ObjectId
+from pymongo import UpdateOne
+import time
 
 uri = "mongodb+srv://williansouza11922:Herika40@cluster0.ajgv5lu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
@@ -42,41 +43,43 @@ def add_log_to_DB(log):
 
 # ----------- IP DATA DB -----------
 
+def delete_IP_data_from_DB(ip_address):
+    db = client['sample_mflix']
+    colecao = db['IP_Data']
+
+    # apaga o documteto do DB
+    colecao.delete_one({"_id": ip_address})
+
+
 def add_IP_data_to_DB(ip_address, data):
     db = client['sample_mflix']
     colecao = db['IP_Data']
 
-    # Create a document with the ip_address as the _id
-    document = {"_id": ip_address, **data}
+    update = {"$set": data}  # Update the existing document with the new data
+    filter = {"_id": ip_address}  # Filter the document by _id
 
-    # Insert the document into the collection
-    colecao.insert_one(document)
+    # atualiza o IP_data no DB
+    result = colecao.update_one(filter, update)
 
-    print("IP_DATA_DB: is on!!!")
-    print(f"Document inserted with ID: {ip_address}")
-    # fecha a conexação com o DB
-    # client.close()
+    if result.modified_count > 0:
+        print(f"Document updated with ID: {ip_address}")
+    else:
+        print(f"No document found with ID: {ip_address}")
 
-# documents = collection.find({})
-# for doc in documents:
-#     for ip, data in doc.items():
-#         if ip != "_id":
-#             new_doc = data
-#             new_doc["_id"] = ip
-#             collection.insert_one(new_doc)
-#     collection.delete_one({"_id": doc["_id"]})
-
-# print("Estrutura reorganizada com sucesso!")
-
+    # se nada for encontrado, insere um novo IP_data no DB
+    if result.matched_count == 0:
+        document = {"_id": ip_address, **data}
+        colecao.insert_one(document)
+        print(f"Document inserted with ID: {ip_address}")
 
 def get_ip_data_from_db(ip_address):
     db = client['sample_mflix']
     colecao = db['IP_Data']
 
-    # Define the data variable
+    # cria o dicionário vazio para receber os dados
     data = {}
 
-    # Find the document that contains the specified IP address as a key in the document
+    # acha o documento que contém o ip_address como _id
     result = colecao.find_one({"_id": ip_address})
 
     if result:
