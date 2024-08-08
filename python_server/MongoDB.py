@@ -36,7 +36,6 @@ def add_log_to_DB(log):
     # insere o log no DB
     colecao.insert_one(log)
     
-    print (f"Document inserted with ID: {log}")
 
     # fecha a conexação com o DB
     # client.close()
@@ -60,11 +59,6 @@ def add_IP_data_to_DB(ip_address, data):
 
     # atualiza o IP_data no DB
     result = colecao.update_one(filter, update)
-
-    if result.modified_count > 0:
-        print(f"Document updated with ID: {ip_address}")
-    else:
-        print(f"No document found with ID: {ip_address}")
 
     # se nada for encontrado, insere um novo IP_data no DB
     if result.matched_count == 0:

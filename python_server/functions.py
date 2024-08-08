@@ -97,25 +97,32 @@ class Request_Log:
 
 # ------------------------------ Geolocalização --------------------------------
 
-ip = '127.0.0.1'
-
 def get_ip_location(ip):
     ip_to_locate = ip
-    request_url = 'https://geolocation-db.com/jsonp/' + ip_to_locate
-
-
-    response = requests.get(request_url)
-
-    result = response.content.decode()
-    result = result.split("(")[1].strip(")")
-    result = json.loads(result)
 
     # pega o nome do pais
-    country_name = result.get('country_name')
-    return country_name
+    response = requests.get('http://ip-api.com/json/' + ip_to_locate + '?fields=country').json()
+    return(response)
 
-The_location = get_ip_location('198.6.3.18')
-print(The_location)
+# ip = '127.0.0.1'
+
+# def get_ip_location(ip):
+#     ip_to_locate = ip
+#     request_url = 'https://geolocation-db.com/jsonp/' + ip_to_locate
+
+
+#     response = requests.get(request_url)
+
+#     result = response.content.decode()
+#     result = result.split("(")[1].strip(")")
+#     result = json.loads(result)
+
+#     # pega o nome do pais
+#     country_name = result.get('country_name')
+#     return country_name
+
+# The_location = get_ip_location('198.6.3.18')
+# print(The_location)
 
 # ------------------------------ autenticação --------------------------------
 
@@ -222,11 +229,14 @@ def Securety_check():
     # se o IP nao estiver no DB cria um novo ip_data para o novo IP
     if ip_data is False:
 
+        # pega o pais do IP
+        ip_location = get_ip_location(ip_address)
+
         # Adicionando um novo IP no dicionário
         new_ip_data = {
             "IP": ip_address,
             "suspicion_Level": 0,
-            # 'location': get_ip_location(ip_address),
+            'Country': ip_location,
             "fingerprint": New_fingerprint,
             "request_count": 0,
             "request_time_limit_count": 0,
@@ -249,6 +259,8 @@ def Securety_check():
     else:
         # pega o IP_data no mongoDB usando o IP
         ip_data = get_ip_data_from_db(ip_address)
+        print("Esta funcionando")
+        print(ip_data["Country"])
 
         # ------------ block by finger print ------------
 
