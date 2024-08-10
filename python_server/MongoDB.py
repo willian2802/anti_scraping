@@ -4,7 +4,6 @@
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from pymongo import UpdateOne
-import time
 
 uri = "mongodb+srv://williansouza11922:Herika40@cluster0.ajgv5lu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
@@ -25,6 +24,8 @@ def connect_to_mongo():
         print(e)
         return "Failed to connect to MongoDB"
 
+# ----------- Add DATA DB -----------
+
 def add_log_to_DB(log):
 
     # Selecionar o banco de dados
@@ -37,8 +38,23 @@ def add_log_to_DB(log):
     colecao.insert_one(log)
     
 
-    # fecha a conexação com o DB
-    # client.close()
+
+def add_to_confList(toAdd, listName):
+
+    # Selecionar uma coleção
+    colecao = db['ConfigList']
+
+
+    colecao.update_one(
+        {"_id": listName},
+        {"$push": {"list": toAdd}}
+    )
+    print(f"{toAdd} foi adicionado à lista negra.")
+
+# Adicionando um IP
+
+# add_to_confList("237.84.2.178", "black_list_IP")
+
 
 # ----------- IP DATA DB -----------
 
@@ -66,6 +82,8 @@ def add_IP_data_to_DB(ip_address, data):
         colecao.insert_one(document)
         print(f"Document inserted with ID: {ip_address}")
 
+# ------------  get DATA from DB -----------
+
 def get_ip_data_from_db(ip_address):
     db = client['sample_mflix']
     colecao = db['IP_Data']
@@ -84,4 +102,44 @@ def get_ip_data_from_db(ip_address):
     if data:
         return data
     return False
+
+def get_list_from_DB(list_name):
+    db = client['sample_mflix']
+    colecao = db['ConfigList']
+
+    list = colecao.find_one({"_id": list_name})
+
+    return list
+
+
+def check_if_is_in(country):
+    query = {"_id": "country_black_list", "list": country}
+    result = collection.find_one(query)
+    
+    if result:
+        print(f"{country} está na lista negra de países.")
+    else:
+        print(f"{country} não está na lista negra de países.")
+
+# Verificando um país
+# check_country_in_blacklist("Brazil")
+
+
+
+def just_insert():
+    db = client['sample_mflix']
+    colecao = db['ConfigList']
+
+    # Documentos a serem inseridos
+    documents = [
+        {"_id": "IP_black_list", "list": ["192.168.0.44", "192.168.0.75"]},
+        {"_id": "IP_yellow_list", "list": []},
+        {"_id": "IP_green_list", "list": []},
+        {"_id": "country_black_list", "list": ["China", "India", "Russia"]},
+        {"_id": "country_Yellow_list", "list": ["India"]},
+        {"_id": "country_Green_list", "list": ["Brazil"]}
+    ]
+
+    # Inserindo os documentos na coleção
+    colecao.insert_many(documents)
 

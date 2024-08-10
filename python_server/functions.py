@@ -91,7 +91,7 @@ class Request_Log:
 
 #     if data['proxy'] or data['vpn']:
 #         return True
-#     return False
+#     return Fals5e
 
 
 
@@ -101,28 +101,11 @@ def get_ip_location(ip):
     ip_to_locate = ip
 
     # pega o nome do pais
+    # if response['country'] in contry_black_list:
+    #     return False
+
     response = requests.get('http://ip-api.com/json/' + ip_to_locate + '?fields=country').json()
     return(response)
-
-# ip = '127.0.0.1'
-
-# def get_ip_location(ip):
-#     ip_to_locate = ip
-#     request_url = 'https://geolocation-db.com/jsonp/' + ip_to_locate
-
-
-#     response = requests.get(request_url)
-
-#     result = response.content.decode()
-#     result = result.split("(")[1].strip(")")
-#     result = json.loads(result)
-
-#     # pega o nome do pais
-#     country_name = result.get('country_name')
-#     return country_name
-
-# The_location = get_ip_location('198.6.3.18')
-# print(The_location)
 
 # ------------------------------ autenticação --------------------------------
 
@@ -259,8 +242,8 @@ def Securety_check():
     else:
         # pega o IP_data no mongoDB usando o IP
         ip_data = get_ip_data_from_db(ip_address)
-        print("Esta funcionando")
-        print(ip_data["Country"])
+        # volta o nivel de suspeita para 0
+        ip_data["suspicion_Level"] = 0
 
         # ------------ block by finger print ------------
 
@@ -385,7 +368,8 @@ def Securety_check():
         ip_data["slow_down"] = "on"
     # atualizar o IP_Data no MongoDB
     add_IP_data_to_DB(ip_address, ip_data)
-     
+
+
     if ip_data["suspicion_Level"] >= 10:
         
         # O False indica que o acesso nao passou na verificaçao de segurança
