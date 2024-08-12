@@ -16,7 +16,7 @@ app.register_blueprint(views, url_prefix='/views')
 
 # +--------------------------- lists ---------------------------
 
-from functions import yellow_list_IP, green_list_IP, black_list_IP
+from MongoDB import add_to_ConfigList
 
 
 # # +--------------------------- autenticação ---------------------------
@@ -116,7 +116,7 @@ def trap_activated():
     current_time = c.strftime('%H:%M:%S')
 
     #adiciona o ip na yellow list
-    yellow_list_IP.append(ip_address)
+    add_to_ConfigList(ip_address, "black_list_IP")
 
     return f"Ha, It's a TRAP!!!!!! Seu IP: {ip_address}, no horario: {current_time}, esta agora bloqueado de acessar o site"
 

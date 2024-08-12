@@ -5,12 +5,11 @@ from datetime import datetime
 from functools import wraps
 
 # MongoDB
-from MongoDB import add_log_to_DB, add_IP_data_to_DB, get_ip_data_from_db
+from MongoDB import add_log_to_DB, add_IP_data_to_DB, get_ip_data_from_db, check_if_is_in
 
 
 # geolication
 import requests
-import json
 
 
 # import tkinter as tk
@@ -18,13 +17,22 @@ import json
 # to use this i need to install screeninfo and geopy
 # from screeninfo import get_monitors
 
+# -------------------------------------------- Securety Config --------------------------------------------
+
+# Limite do nivel de suspeita antes de ser bloqueado
+suspicion_limit = 10
+
+# Tempo minimo de tolerancia entre as requisições
+# mandar multiplas requisiçoes passando do limite de tempo ira levar ao eventual bloqueio
+time_limit = 10
+
 # +--------------------------- lists ---------------------------
 
-black_list_IP = ["192.168.0.44", "192.168.0.75"]
-yellow_list_IP = []
-green_list_IP = []
+# black_list_IP = ["192.168.0.44", "192.168.0.75"]
+# yellow_list_IP = []
+# green_list_IP = []
 
-contry_black_list = ["China","India","Brazil","Russia"]
+# contry_black_list = ["China","India","Brazil","Russia"]
 
 
 # dicionário para armazenar os IPs e seus atributos
@@ -94,17 +102,23 @@ class Request_Log:
 #     return Fals5e
 
 
+def detect_vpn_proxy(ip_address):
+    api_url = f"https://api.ipify.org?format=json&ip={ip_address}"
+    response = requests.get(api_url)
+    data = response.json()
+    if data["proxy"] or data["vpn"]:
+        return True
+    return False
+
+
 
 # ------------------------------ Geolocalização --------------------------------
 
 def get_ip_location(ip):
     ip_to_locate = ip
 
-    # pega o nome do pais
-    # if response['country'] in contry_black_list:
-    #     return False
-
     response = requests.get('http://ip-api.com/json/' + ip_to_locate + '?fields=country').json()
+
     return(response)
 
 # ------------------------------ autenticação --------------------------------
@@ -140,15 +154,11 @@ def Securety_check():
     # ------------------ informaçoes da requisição ------------------
 
     # pega o IP o user_agent o tempo do request etc...
-    ip_address = request.remote_addr
+    ip_address = "157.3.5.16"
     user_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     PATH = request.path
     user_agent = request.headers.get('User-Agent')
 
-    # # ------------------ informaçoes de localidade ------------------
-    # country = get_ip_location(ip_address)
-    # print(f"Country: {country}, City: {city}")
-    
     # uma descriçao para o log ou outras informaçoes uteis
     coment = "None"
 
@@ -201,7 +211,7 @@ def Securety_check():
     # ------------------ block requests com muitas requisições em um curto período de tempo e verifica o fingerprint ------------------
 
     # Obtendo o tempo atual como objeto datetime
-    # nao funciona pegando o user_time 
+    # nao funciona usando o user_time 
     tempo_atual = datetime.now()
 
     # ----------------- adiciona o IP_data no mongoDB -----------------
@@ -221,21 +231,24 @@ def Securety_check():
             "suspicion_Level": 0,
             'Country': ip_location,
             "fingerprint": New_fingerprint,
+            # se passar de um certo limite de requisições o acesso é suspenso
             "request_count": 0,
+            # request_time_limit_count => quantidade de requisições em um curto período de tempo sequidas
             "request_time_limit_count": 0,
+            # last_request_time => tempo da requisição mais recente
             "last_request_time": tempo_atual.strftime('%Y-%m-%d %H:%M:%S'),
             "time_to_delete": 24,
             "slow_down": "off",
             "slow_down_count": 0
         }
-        # quando o IP entra no dicionário o tempo de acesso do IP e 12:00
-        # assim evitando erro com o "slow_down" mode
 
         # adiciona o IP_data no mongoDB, o ip_address vai ser o "_id" do objeto no DB
         add_IP_data_to_DB(ip_address, new_ip_data)
 
         # pega o IP_data no mongoDB usando o IP
         ip_data = get_ip_data_from_db(ip_address)
+        # quando o IP_data e criado e adicionado DB o tempo de acesso do IP e 12:00
+        # assim evitando erro com o "slow_down" mode
         ip_data["last_request_time"] = tempo_atual.replace(hour=12, minute=0, second=0, microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
 
 
@@ -243,7 +256,23 @@ def Securety_check():
         # pega o IP_data no mongoDB usando o IP
         ip_data = get_ip_data_from_db(ip_address)
         # volta o nivel de suspeita para 0
+        # para iniciar de novo a verificaçao de segurança
         ip_data["suspicion_Level"] = 0
+
+        # verifica se o pais esta na blacklist
+        # se retornar True significa que esta na lista
+        if check_if_is_in(ip_data['Country'], "country_black_list") == True:
+
+            coment = "Acesso não autorizado ao pais em que voce esta localizado"
+            # cria e adicina o log no DB
+            log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
+            log.create_log()
+            return (False, coment)
+        
+        if check_if_is_in(ip_data['Country'], "country_yellow_list") == True:
+
+            ip_data["suspicion_Level"] += 2
+            coment += "Country: Alert, "
 
         # ------------ block by finger print ------------
 
@@ -285,7 +314,7 @@ def Securety_check():
 
             # Se a diferença de tempo for menor que 10 segundos            
             #Nota: no futuro modificar para o contador tambem usar o fingerprint nao so o IP para bloquiar o acesso
-            if time_difference < 10:
+            if time_difference <= time_limit:
                 
                 ip_data["request_time_limit_count"] += 1
 
@@ -304,8 +333,6 @@ def Securety_check():
                     # normalmente 1 minuto
                     ip_data["slow_down"] = "on"
 
-                    # O False indica que o acesso nao passou na verificaçao de segurança
-                    return (False,coment)
             else:
                 # volta o contador para 0 so vai ser bloquiado se for varias vezes seguidas
                 ip_data["request_time_limit_count"] = 0
@@ -336,27 +363,14 @@ def Securety_check():
     # bloqueia os agents que tenhan o nome "bot" ou "scraper"
     user_agent = request.headers.get('User-Agent')
     if re.search(r'\bbot\b', user_agent, re.IGNORECASE) or re.search(r'\bscraper\b', user_agent, re.IGNORECASE):
-        coment += "agents_check: alert, "
+        coment += "agents_check: RED ALERT, "
         ip_data["suspicion_Level"] += 10
     
     # se o agente for "headless" nao vai ter acesso ao site
     if re.search(r'\bheadless\b', user_agent, re.IGNORECASE):
-        coment += "agents_headless: alert, "
+        coment += "agents_headless: RED ALERT, "
         ip_data["suspicion_Level"] += 10
     
-
-    # ------------------ verifica se o IP esta em uma black list ou yellow list ------------------    
-
-    # bloqueia os IPs que estiverem na black list ou na yellow list e adiciona um comentario
-    if ip_address in black_list_IP or ip_address in yellow_list_IP:
-        coment = "IP esta em uma das listas de bloqueio"
-
-        # cria e adicina o log
-        log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
-        log.create_log()
-        
-        # O False indica que o acesso nao passou na verificaçao de segurança
-        return (False,coment)
 
 # ------------------ no final de tudo ------------------ 
 
@@ -370,7 +384,8 @@ def Securety_check():
     add_IP_data_to_DB(ip_address, ip_data)
 
 
-    if ip_data["suspicion_Level"] >= 10:
+    # se o nivel de suspeita for maior ou igual ao suspicion_limit
+    if ip_data["suspicion_Level"] >= suspicion_limit:
         
         # O False indica que o acesso nao passou na verificaçao de segurança
         return (False,coment)

@@ -26,20 +26,10 @@ def connect_to_mongo():
 
 # ----------- Add DATA DB -----------
 
-def add_log_to_DB(log):
+def add_to_ConfigList(toAdd, listName):
 
     # Selecionar o banco de dados
     db = client['sample_mflix']
-
-    # Selecionar uma coleção
-    colecao = db['Logs']
-
-    # insere o log no DB
-    colecao.insert_one(log)
-    
-
-
-def add_to_confList(toAdd, listName):
 
     # Selecionar uma coleção
     colecao = db['ConfigList']
@@ -51,10 +41,19 @@ def add_to_confList(toAdd, listName):
     )
     print(f"{toAdd} foi adicionado à lista negra.")
 
-# Adicionando um IP
 
-# add_to_confList("237.84.2.178", "black_list_IP")
 
+def add_log_to_DB(log):
+
+    # Selecionar o banco de dados
+    db = client['sample_mflix']
+
+    # Selecionar uma coleção
+    colecao = db['Logs']
+
+    # insere o log no DB
+    colecao.insert_one(log)
+    
 
 # ----------- IP DATA DB -----------
 
@@ -80,7 +79,6 @@ def add_IP_data_to_DB(ip_address, data):
     if result.matched_count == 0:
         document = {"_id": ip_address, **data}
         colecao.insert_one(document)
-        print(f"Document inserted with ID: {ip_address}")
 
 # ------------  get DATA from DB -----------
 
@@ -103,6 +101,7 @@ def get_ip_data_from_db(ip_address):
         return data
     return False
 
+
 def get_list_from_DB(list_name):
     db = client['sample_mflix']
     colecao = db['ConfigList']
@@ -111,20 +110,19 @@ def get_list_from_DB(list_name):
 
     return list
 
+# retorna True, estiver dentro da lista se nao retorna False
+def check_if_is_in(to_check, list_name):
 
-def check_if_is_in(country):
-    query = {"_id": "country_black_list", "list": country}
-    result = collection.find_one(query)
+    db = client['sample_mflix']
+    colecao = db['ConfigList']
+
+    query = {"_id": list_name, "list": to_check}
+    result = colecao.find_one(query)
     
     if result:
-        print(f"{country} está na lista negra de países.")
+        return (True, result)
     else:
-        print(f"{country} não está na lista negra de países.")
-
-# Verificando um país
-# check_country_in_blacklist("Brazil")
-
-
+        return (False, result)
 
 def just_insert():
     db = client['sample_mflix']
