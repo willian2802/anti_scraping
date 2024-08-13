@@ -130,12 +130,13 @@ def just_insert():
 
     # Documentos a serem inseridos
     documents = [
-        {"_id": "IP_black_list", "list": ["192.168.0.44", "192.168.0.75"]},
-        {"_id": "IP_yellow_list", "list": []},
-        {"_id": "IP_green_list", "list": []},
-        {"_id": "country_black_list", "list": ["China", "India", "Russia"]},
-        {"_id": "country_Yellow_list", "list": ["India"]},
-        {"_id": "country_Green_list", "list": ["Brazil"]}
+        {"_id": "agent_black_list", "list": ["bot", "crawler", "spider"]},
+        # {"_id": "IP_black_list", "list": ["192.168.0.44", "192.168.0.75"]},
+        # {"_id": "IP_yellow_list", "list": []},
+        # {"_id": "IP_green_list", "list": []},
+        # {"_id": "country_black_list", "list": ["China", "India", "Russia"]},
+        # {"_id": "country_Yellow_list", "list": ["India"]},
+        # {"_id": "country_Green_list", "list": ["Brazil"]}
     ]
 
     # Inserindo os documentos na coleção

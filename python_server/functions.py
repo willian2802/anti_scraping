@@ -102,15 +102,21 @@ class Request_Log:
 #     return Fals5e
 
 
-def detect_vpn_proxy(ip_address):
-    api_url = f"https://api.ipify.org?format=json&ip={ip_address}"
-    response = requests.get(api_url)
-    data = response.json()
-    if data["proxy"] or data["vpn"]:
-        return True
-    return False
 
+# def detect_vpn_proxy(ip_address):
+#     api_url = f"https://api.ipify.org?format=json&ip={ip_address}"
+#     response = requests.get(api_url)
+#     data = response.json()
+#     if data["proxy"] or data["vpn"]:
+#         return True
+#     return False
 
+# # Example usage:
+# ip_address = "8.8.8.8"
+# if detect_vpn_proxy(ip_address):
+#     print("VPN or proxy detected!")
+# else:
+#     print("No VPN or proxy detected.")
 
 # ------------------------------ Geolocalização --------------------------------
 
@@ -161,15 +167,6 @@ def Securety_check():
 
     # uma descriçao para o log ou outras informaçoes uteis
     coment = "None"
-
-
-
-    # ------------------ pega o tamanho da tela do usuario ------------------
-    # monitors = get_monitors()
-    # if monitors:
-    #     tamanho_tela = (monitors[0].width, monitors[0].height)
-    # else:
-    #     tamanho_tela = (0, 0)
 
     # ------------------ Create finger-print ------------------
     # Informações da CPU

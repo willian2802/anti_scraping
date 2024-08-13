@@ -89,6 +89,9 @@ def track_interaction():
     interaction_data = request.json
     print('Dados de interação recebidos:', interaction_data)
 
+
+
+
     if interaction_data['event'] == 'mousemove':
         movements = interaction_data['movements']
         if is_smooth_and_constant(movements):
