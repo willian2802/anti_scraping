@@ -86,6 +86,21 @@ class Request_Log:
     
     def show_all(self):
         return (Logs)
+    
+
+#  ------------------------------ mouse movement --------------------------------
+
+def movement_is_from_a_bot(result):
+
+    ip_address = request.remote_addr
+
+    ip_data = get_ip_data_from_db(ip_address)
+
+    # adiciona o IP_data no mongoDB, o ip_address vai ser o "_id" do objeto no DB
+    add_IP_data_to_DB(ip_address, new_ip_data)
+
+    if result == True:
+        ip_data
 
 # ------------------------------ verifica se e uma VPN ou uma proxy --------------------------------
 # usando a API do IPQualityScore
@@ -187,24 +202,6 @@ def Securety_check():
     # Obtém o hash hexadecimal
     New_fingerprint = hash_object.hexdigest()
 
-    # ------------------ block Anonymous IP ------------------
-    # if is_anonymous_ip(ip_address):
-    #     coment = "Bloqueado por usar IP anônimo"
-    #     log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
-    #     log.create_log()
-    #     return (False, coment)
-
-
-    # ------------------ block Location ------------------    
-    # bloquei o acesso de acordo com as informações de localidade
-    
-    # if location[ip_address] in contry_black_list:
-    #     coment = "Acesso não autorizado ao pais em que voce esta localizado"
-    #     # cria e adicina o log
-    #     log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
-    #     log.create_log()
-    #     return (False,coment)
-
     # ------------------ block requests com muitas requisições em um curto período de tempo e verifica o fingerprint ------------------
 
     # Obtendo o tempo atual como objeto datetime
@@ -252,8 +249,8 @@ def Securety_check():
     else:
         # pega o IP_data no mongoDB usando o IP
         ip_data = get_ip_data_from_db(ip_address)
-        # volta o nivel de suspeita para 0
         # para iniciar de novo a verificaçao de segurança
+        # e preciso redefinir o nivel de suspeita
         ip_data["suspicion_Level"] = 0
 
         # verifica se o pais esta na blacklist

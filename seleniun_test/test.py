@@ -24,7 +24,7 @@ def test_honeypot():
     try:
         # ------------------------ honeypot test ------------------------
         # Acesse a página inicial
-        driver.get('https://willian.pythonanywhere.com/views')
+        driver.get('http://127.0.0.1:5000/views/')
 
         # usa o wait para esperar ao inves do time.sleep()
         # por que o time.sleep() da erro
@@ -150,6 +150,9 @@ def test_agensts_detection():
 
 def test_mouse_movement():
     
+    # Acesse a página inicial
+    driver.get('http://127.0.0.1:5000/views/')
+
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")  # Execute o Chrome em modo headless (sem janela gráfica)
 
@@ -186,6 +189,63 @@ def test_mouse_movement():
     simulate_mouse_movements()
     simulate_clicks()
     simulate_scroll()
+
+    time.sleep(50000)
+
+
+
+
+def simulate_human_mouse_movements(driver, duration):
+    """
+    Simulate human-like mouse movements for a specified duration.
+
+    Args:
+        driver (webdriver): The Selenium webdriver instance.
+        duration (int): The duration of the simulation in seconds.
+    """
+    actions = ActionChains(driver)
+
+    # Get the body element to move the mouse to
+    body = driver.find_element(By.TAG_NAME, 'body')
+
+    # Simulate mouse movements for the specified duration
+    start_time = time.time()
+    while time.time() - start_time < duration:
+        # Randomly move the mouse to a point within the window
+        x_offset = random.randint(0, driver.execute_script("return window.innerWidth"))
+        y_offset = random.randint(0, driver.execute_script("return window.innerHeight"))
+        actions.move_by_offset(x_offset, y_offset).perform()
+
+        # Randomly pause for a short duration to simulate human-like behavior
+        time.sleep(random.uniform(0.1, 1.0))
+
+        # Move the mouse back to the body element to avoid moving off-screen
+        actions.move_to_element(body).perform()
+
+        # Randomly click the mouse to simulate human-like behavior
+        if random.random() < 0.1:
+            actions.click().perform()
+
+        # Randomly scroll the window to simulate human-like behavior
+        if random.random() < 0.05:
+            driver.execute_script("window.scrollBy(0, 100);")
+            time.sleep(0.2)
+            driver.execute_script("window.scrollBy(0, -100);")
+            time.sleep(0.2)
+
+def test_mouse_movement2():
+    driver = webdriver.Chrome()
+    driver.get('http://127.0.0.1:5000/views/')
+
+    simulate_human_mouse_movements(driver, 50000)
+
+    driver.quit()
+
+test_mouse_movement2()
+
+
+
+
 
 def simulate_interaction(window_size, user_agent, url):
     driver = create_driver(window_size, user_agent)
@@ -291,3 +351,4 @@ def test_typing_interaction():
     if 'conteudo_especifico' in page_content:
         print("Página acessada com sucesso, medidas anti-scraping não detectadas.")
     else:
+        print("medidas anti-scraping detectadas.")

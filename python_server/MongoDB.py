@@ -39,7 +39,7 @@ def add_to_ConfigList(toAdd, listName):
         {"_id": listName},
         {"$push": {"list": toAdd}}
     )
-    print(f"{toAdd} foi adicionado à lista negra.")
+    # print(f"{toAdd} foi adicionado à lista negra.")
 
 
 
@@ -95,7 +95,6 @@ def get_ip_data_from_db(ip_address):
     if result:
         data = result
 
-    print(data)
     # If found, return the data of the specific IP
     if data:
         return data
@@ -131,12 +130,12 @@ def just_insert():
     # Documentos a serem inseridos
     documents = [
         {"_id": "agent_black_list", "list": ["bot", "crawler", "spider"]},
-        # {"_id": "IP_black_list", "list": ["192.168.0.44", "192.168.0.75"]},
-        # {"_id": "IP_yellow_list", "list": []},
-        # {"_id": "IP_green_list", "list": []},
-        # {"_id": "country_black_list", "list": ["China", "India", "Russia"]},
-        # {"_id": "country_Yellow_list", "list": ["India"]},
-        # {"_id": "country_Green_list", "list": ["Brazil"]}
+        {"_id": "IP_black_list", "list": ["192.168.0.44", "192.168.0.75"]},
+        {"_id": "IP_yellow_list", "list": []},
+        {"_id": "IP_green_list", "list": []},
+        {"_id": "country_black_list", "list": ["China", "India", "Russia"]},
+        {"_id": "country_Yellow_list", "list": ["India"]},
+        {"_id": "country_Green_list", "list": ["Brazil"]}
     ]
 
     # Inserindo os documentos na coleção

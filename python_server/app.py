@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, redirect, url_for,session
+from flask import Flask, request, jsonify, redirect, url_for,session, abort
 from views import views
 from datetime import datetime
 from functools import wraps
@@ -89,22 +89,26 @@ def track_interaction():
     interaction_data = request.json
     print('Dados de interação recebidos:', interaction_data)
 
-
-
+    track_movements = 0
 
     if interaction_data['event'] == 'mousemove':
         movements = interaction_data['movements']
         if is_smooth_and_constant(movements):
-            print('Interação suspeita detectada: Movimentos muito suaves e constantes')
+            # 'Interação suspeita detectada: Movimentos muito suaves e constantes'
+            track_movements += 1
         elif is_frequency_high(movements):
-            print('Interação suspeita detectada: Frequência de eventos muito alta')
+            #'Interação suspeita detectada: Frequência de eventos muito alta'
+            track_movements += 1
         elif not has_human_variation(movements):
-            print('Interação suspeita detectada: Falta de variação humana nos movimentos')
+            #'Interação suspeita detectada: Falta de variação humana nos movimentos'
+            track_movements += 1
         else:
-            print('Interação parece ser humana')
-        
-        
+            #'Interação parece ser humana'
+            track_movements = True
 
+    if track_movements >= 2:
+        abort(444, 'Interação suspeita detectada: Movimonto não humano')
+        
     return jsonify(status="success"), 200
 
 
