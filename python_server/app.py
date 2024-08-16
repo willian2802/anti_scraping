@@ -94,13 +94,16 @@ def track_interaction():
     if interaction_data['event'] == 'mousemove':
         movements = interaction_data['movements']
         if is_smooth_and_constant(movements):
-            # 'Interação suspeita detectada: Movimentos muito suaves e constantes'
+            #'Interação suspeita detectada: Movimentos muito suaves e constantes'
+            print('Interação suspeita detectada: Movimentos muito suaves e constantes')
             track_movements += 1
         elif is_frequency_high(movements):
             #'Interação suspeita detectada: Frequência de eventos muito alta'
+            print('Interação suspeita detectada: Frequência de eventos muito alta')
             track_movements += 1
         elif not has_human_variation(movements):
             #'Interação suspeita detectada: Falta de variação humana nos movimentos'
+            print('Interação suspeita detectada: Falta de variação humana nos movimentos')
             track_movements += 1
         else:
             #'Interação parece ser humana'
@@ -110,7 +113,6 @@ def track_interaction():
         abort(444, 'Interação suspeita detectada: Movimonto não humano')
         
     return jsonify(status="success"), 200
-
 
 
 
