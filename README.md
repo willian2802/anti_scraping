@@ -1,7 +1,21 @@
 
-
 Descrição do Projeto
 Este projeto implementa um sistema de segurança para proteger aplicações web contra acessos não autorizados, requisições excessivas, e outras atividades suspeitas. O sistema realiza uma série de verificações em cada requisição, identificando possíveis ameaças e tomando medidas preventivas para garantir a segurança da aplicação.
+
+Tecnologias utilizadas:
+Python-Flask, HTML, CSS, JavaSript, Bootstrap, MongoDB
+
+Organização de ficheiros:
+  Nota: aqui que esta toda a configuraçao do site deste o HTML e css ate as funçoes de segurança feitas em python
+  python_server;
+    app.py: Arquivo principal que inicializa e executa a aplicação.
+    functions.py: Contém funções auxiliares usadas no projeto como o verificaçao de segurança.
+    MongoDB.py: Script relacionado à integração com o MongoDB.
+    views.py: Contém as funções de visualização que controlam o fluxo entre os templates HTML e o servidor.
+
+  Nota: arquivo com os testes e funçoes de scraping para testar a proteçao do site.
+  selenium_test;
+    test.py: Script de teste automatizado usando Selenium, com varias funções para testar difrerentes tipos de proteção e acesso.
 
 Funcionamento:
 
