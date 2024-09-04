@@ -1,5 +1,6 @@
-from flask import Flask, request, jsonify, redirect, url_for,session, abort
+from flask import Flask, request, jsonify, abort
 from views import views
+
 from datetime import datetime
 from functools import wraps
 
@@ -18,29 +19,6 @@ app.register_blueprint(views, url_prefix='/views')
 
 from MongoDB import add_to_ConfigList
 
-
-# # +--------------------------- autenticação ---------------------------
-
-@app.route('/submit_captcha', methods=['POST'])
-def submit_captcha():
-
-    print("submit_captcha is on!!!") 
-
-    if request.method == 'POST':
-        # pega a resposta do captcha do usuario    
-        data = request.get_json()
-        # reposta do captcha do usuario
-        user_text = data.get('userText')
-        right_captcha = data.get('right_captcha')
-
-        print(user_text)
-        print(right_captcha)
-        # Se autenticado com sucesso
-        
-        if right_captcha == True:
-            print("autenticado")
-            session['authenticated'] = True
-            return('captcha autenticado com sucesso')
 
 # -------------------------------- Console log --------------------------------
 
@@ -87,7 +65,7 @@ def has_human_variation(movements):
 @app.route('/track_interaction', methods=['POST'])
 def track_interaction():
     interaction_data = request.json
-    print('Dados de interação recebidos:', interaction_data)
+    print('Dados de interação recebidos:')
 
     track_movements = 0
 
@@ -133,4 +111,22 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
+# from flask import Flask, session
+# from flask_session import Session
 
+# app = Flask(__name__)
+# app.config["SESSION_PERMANENT"] = False
+# app.config["SESSION_TYPE"] = "filesystem"
+# Session(app)
+
+# @app.route("/")
+# def index():
+#     session["authenticated"] = True
+#     return "Olá, mundo!"
+
+# @app.route("/outro")
+# def outro():
+#     if session["authenticated"]:
+#         return "Você está autenticado!"
+#     else:
+#         return "Você não está autenticado!"

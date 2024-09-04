@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, session, redirect, url_for
 from functions import Securety_check,login_required
 
 views = Blueprint(__name__, 'views')
@@ -6,6 +6,26 @@ views = Blueprint(__name__, 'views')
 
 # black_list_IP = []
 # yellow_list_IP = []
+
+
+# # +--------------------------- autenticação ---------------------------
+
+
+@views.route('/submit_captcha', methods=['POST'])
+def submit_captcha():
+
+    if request.method == 'POST':
+        # pega a resposta do captcha do usuario    
+        data = request.get_json()
+
+        # reposta do captcha do usuario
+        captcha_pass = data.get('right_captcha')
+
+        if captcha_pass == True:
+            session['authenticated'] = True
+            return('captcha: Success')
+        
+        return('captcha: Failed')
 
 
 @views.route('/')

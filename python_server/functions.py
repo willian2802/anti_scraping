@@ -390,6 +390,6 @@ def Securety_check():
     # cria e adicina o log no MongoDB
     log = Request_Log(user_time, ip_address, PATH, user_agent, New_fingerprint, coment)
     log.create_log()
+    
     # O True indica que o acesso passou na verificaçao de segurança
-
     return (True,Final_coment)
