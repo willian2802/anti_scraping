@@ -148,75 +148,47 @@ def test_agensts_detection():
     except Exception as e:
         print(f"An error occurred: {e}")
 
-def test_mouse_movement():
-    
-    # Acesse a página inicial
-    driver.get('http://127.0.0.1:5000/views/')
 
+
+def simulate_mouse_movements(url):
+    # Configuração do driver do Selenium
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # Execute o Chrome em modo headless (sem janela gráfica)
+    options.add_argument('headless')  # Executa o navegador em modo headless
+    driver = webdriver.Chrome(options=options)
 
-    # Inicializar ActionChains
+    # Acessa o URL
+    driver.get(url)
+
+    # Espera 5 segundos para carregar a página
+    time.sleep(5)
+
+    # Cria um objeto ActionChains para simular movimentos de mouse
     actions = ActionChains(driver)
 
-    # Função para simular movimentos do mouse
-    def simulate_mouse_movements():
-        body = driver.find_element('body')
-        for _ in range(100):
-            x_offset = random.randint(-100, 100)
-            y_offset = random.randint(-100, 100)
-            actions.move_by_offset(x_offset, y_offset).perform()
-            time.sleep(0.05)
-            actions.move_to_element(body).perform()
+    # Simula movimentos de mouse aleatórios
+    for _ in range(10):
+        # Gera um ponto aleatório na tela
+        x = random.randint(0, 800)
+        y = random.randint(0, 600)
 
-    # Função para simular cliques
-    def simulate_clicks():
-        for _ in range(10):
-            x_offset = random.randint(0, driver.execute_script("return window.innerWidth"))
-            y_offset = random.randint(0, driver.execute_script("return window.innerHeight"))
-            actions.move_by_offset(x_offset, y_offset).click().perform()
-            time.sleep(0.2)
+        # Move o mouse para o ponto aleatório
+        actions.move_to_element_with_offset(driver.find_element_by_tag_name('body'), x, y)
 
-    # Função para simular rolagem
-    def simulate_scroll():
-        for _ in range(5):
-            driver.execute_script("window.scrollBy(0, 100);")
-            time.sleep(0.2)
-            driver.execute_script("window.scrollBy(0, -100);")
-            time.sleep(0.2)
-    
-    # Executar simulações
-    simulate_mouse_movements()
-    simulate_clicks()
-    simulate_scroll()
+        # Clica no ponto aleatório
+        actions.click()
 
-    time.sleep(50000)
+        # Executa os movimentos de mouse
+        actions.perform()
 
+        # Espera 1 segundo antes de realizar o próximo movimento
+        time.sleep(1)
 
-def simulate_human_mouse_movements(driver, duration):
-    actions = ActionChains(driver)
-    body = driver.find_element(By.TAG_NAME, 'body')
-    start_time = time.time()
-    window_width = driver.execute_script("return window.innerWidth")
-    window_height = driver.execute_script("return window.innerHeight")
-    
-    while time.time() - start_time < duration:
-        x_offset = random.randint(100, window_width - 100)
-        y_offset = random.randint(100, window_height - 100)
-        actions.move_by_offset(x_offset, y_offset).perform()
-        time.sleep(random.uniform(0.5, 2.0))
-        actions.move_to_element(body).perform()
-        if random.random() < 0.1:
-            actions.click().perform()
-
-# Test function
-def test_mouse_movement2():
-    driver = webdriver.Chrome()
-    driver.get('http://127.0.0.1:5000/views/')
-    simulate_human_mouse_movements(driver, 50)  # Reduced duration for testing
+    # Fecha o navegador
     driver.quit()
 
-test_mouse_movement()
+# Chama a função com o URL desejado
+simulate_mouse_movements('http://127.0.0.1:5000/views/')
+
 
 
 
