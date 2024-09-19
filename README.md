@@ -40,6 +40,11 @@ Respostas Automáticas:
 
 Dependendo das verificações, o sistema pode bloquear o acesso, adicionar o IP a uma lista como a IP_black_list, ativar um modo de redução de velocidade (slow_down), ou permitir o acesso normalmente.
 
+videos de demostraçao:
+https://www.loom.com/share/b5aef61290094fb9aa49666fac590d99
+
+https://www.loom.com/share/08f2703b77a24262b7ce052e88ff2206
+
 Benefícios:
 Este sistema é ideal para proteger aplicativos web contra ataques automatizados, minimizar o impacto de bots, e garantir que o acesso seja feito apenas por usuários legítimos. Além disso, ele fornece uma camada adicional de segurança baseada em geolocalização e características do dispositivo, garantindo maior controle sobre quem pode acessar sua aplicação, junto do controle e registro de logs isso da uma poderosa vantagem a qualquer administrador encaregado do site de monitoralo e gerencialo.
 Link:https://willian.pythonanywhere.com/views/
