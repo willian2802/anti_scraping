@@ -8,10 +8,11 @@ Python-Flask, HTML, CSS, JavaSript, Bootstrap, MongoDB
 Organização de ficheiros:
   Nota: aqui que esta toda a configuraçao do site deste o HTML e css ate as funçoes de segurança feitas em python
   python_server;
-    app.py: Arquivo principal que inicializa e executa a aplicação.
-    functions.py: Contém funções auxiliares usadas no projeto como o verificaçao de segurança.
-    MongoDB.py: Script relacionado à integração com o MongoDB.
-    views.py: Contém as funções de visualização que controlam o fluxo entre os templates HTML e o servidor.
+    Principais ficheiros:
+      app.py: Arquivo principal que inicializa e executa a aplicação.
+      functions.py: Contém funções auxiliares usadas no projeto como o verificaçao de segurança.
+      MongoDB.py: Script relacionado à integração com o MongoDB.
+      views.py: Contém as funções de visualização que controlam o fluxo entre os templates HTML e o servidor.
 
   Nota: arquivo com os testes e funçoes de scraping para testar a proteçao do site.
   selenium_test;
@@ -26,7 +27,6 @@ Isso gera um log com essas informaçoes que é armazenado no MongoDB, junto com 
 
 Verificações de Segurança:
 
-IP Anônimo e Proxy: O sistema pode identificar e bloquear IPs que utilizam VPNs ou proxies anônimos.
 Localização Geográfica: A localização do IP é verificada, bloqueando acessos de países não autorizados.
 Controle de Requisições: Limita o número de requisições permitidas em um curto período de tempo e o total de requisições de um IP específico.
 Agentes de Usuário Suspeitos: Bloqueia requisições de agentes que indicam bots, scrapers ou navegadores headless.
@@ -40,6 +40,11 @@ Respostas Automáticas:
 
 Dependendo das verificações, o sistema pode bloquear o acesso, adicionar o IP a uma lista como a IP_black_list, ativar um modo de redução de velocidade (slow_down), ou permitir o acesso normalmente.
 
+videos de demostraçao:
+https://www.loom.com/share/b5aef61290094fb9aa49666fac590d99
+
+https://www.loom.com/share/08f2703b77a24262b7ce052e88ff2206
+
 Benefícios:
-Este sistema é ideal para proteger aplicativos web contra ataques automatizados, minimizar o impacto de bots, e garantir que o acesso seja feito apenas por usuários legítimos. Além disso, ele fornece uma camada adicional de segurança baseada em geolocalização e características do dispositivo, garantindo maior controle sobre quem pode acessar sua aplicação.
+Este sistema é ideal para proteger aplicativos web contra ataques automatizados, minimizar o impacto de bots, e garantir que o acesso seja feito apenas por usuários legítimos. Além disso, ele fornece uma camada adicional de segurança baseada em geolocalização e características do dispositivo, garantindo maior controle sobre quem pode acessar sua aplicação, junto do controle e registro de logs isso da uma poderosa vantagem a qualquer administrador encaregado do site de monitoralo e gerencialo.
 Link:https://willian.pythonanywhere.com/views/
