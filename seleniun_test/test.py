@@ -191,7 +191,6 @@ simulate_mouse_movements('http://127.0.0.1:5000/views/')
 
 
 
-
 # Configurações para diferentes máquinas
 machines = [
     {"window_size": "1920,1080", "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"},

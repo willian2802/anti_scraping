@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, session, redirect, url_for
-from functions import Securety_check,login_required
+from functions import Securety_check
 
 views = Blueprint(__name__, 'views')
 
@@ -32,7 +32,6 @@ def submit_captcha():
 def render_index():
 
     # roda as funçoes que verificao se e um bot ou nao se for entao bloqueia o acesso
-    Securety_check()
     result, comment = Securety_check()
 
     # verifica se a function retorna False isso significa que o acesso foi bloqueado
@@ -50,12 +49,10 @@ def logs_console():
     return render_template('nothing_here.html')
     
 @views.route('/cofe_shop')
-@login_required
 # antes de ativar a funçao, ele vai rodar a funçao Login_required
 # que verifica se o usuario foi autenticado se sim ele passa se nao ele volta pro index que e o captcha
 def cofe_page():
     # roda as funçoes que verificao se e um bot ou nao se for entao bloqueia o acesso
-    Securety_check()
     result, comment = Securety_check()
 
     # verifica se a function retorna False isso significa que o acesso foi bloqueado

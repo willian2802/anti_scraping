@@ -23,23 +23,23 @@ def connect_to_mongo():
     except Exception as e:
         print(e)
         return "Failed to connect to MongoDB"
+    
 
 # ----------- Add DATA DB -----------
 
-def add_to_ConfigList(toAdd, listName):
+# def add_to_ConfigList(toAdd, listName):
 
-    # Selecionar o banco de dados
-    db = client['sample_mflix']
+#     # Selecionar o banco de dados
+#     db = client['sample_mflix']
 
-    # Selecionar uma coleção
-    colecao = db['ConfigList']
+#     # Selecionar uma coleção
+#     colecao = db['ConfigList']
 
 
-    colecao.update_one(
-        {"_id": listName},
-        {"$push": {"list": toAdd}}
-    )
-    # print(f"{toAdd} foi adicionado à lista negra.")
+#     colecao.update_one(
+#         {"_id": listName},
+#         {"$push": {"list": toAdd}}
+#     )
 
 
 
@@ -112,32 +112,28 @@ def get_list_from_DB(list_name):
 # retorna True, estiver dentro da lista se nao retorna False
 def check_if_is_in(to_check, list_name):
 
+    print(to_check)
+    print(list_name)
+
     db = client['sample_mflix']
     colecao = db['ConfigList']
 
     query = {"_id": list_name, "list": to_check}
     result = colecao.find_one(query)
-    
-    if result:
-        return (True, result)
-    else:
-        return (False, result)
 
-def just_insert():
+    print("result: check_if_is_in" + str(result))    
+    if result:
+        return (True)
+    else:
+        return (False)
+
+
+
+
+def insert_to_list(nome_da_lista, insert_value):
     db = client['sample_mflix']
     colecao = db['ConfigList']
 
-    # Documentos a serem inseridos
-    documents = [
-        {"_id": "agent_black_list", "list": ["bot", "crawler", "spider"]},
-        {"_id": "IP_black_list", "list": ["192.168.0.44", "192.168.0.75"]},
-        {"_id": "IP_yellow_list", "list": []},
-        {"_id": "IP_green_list", "list": []},
-        {"_id": "country_black_list", "list": ["China", "India", "Russia"]},
-        {"_id": "country_Yellow_list", "list": ["India"]},
-        {"_id": "country_Green_list", "list": ["Brazil"]}
-    ]
-
-    # Inserindo os documentos na coleção
-    colecao.insert_many(documents)
+    # Atualiza a lista com o novo valor
+    colecao.update_one({"_id": nome_da_lista}, {"$addToSet": {"list": insert_value}})
 
